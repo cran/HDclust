@@ -1,0 +1,37 @@
+useDynLib(HDclust, .registration=TRUE)
+
+importFrom(Rcpp, evalCpp) 
+importFrom(graphics, "plot") 
+importFrom(stats, "prcomp")
+importFrom("methods", "getClass", "is", "new", "show")
+importFrom("utils", "setTxtProgressBar", "txtProgressBar")
+import(RcppProgress)
+
+export(hmmvbTrain)
+export(hmmvbClust)
+export(vbSearchControl)
+export(trainControl)
+export(clustControl)
+export(vb)
+export(hmmvbBIC)
+exportClasses(VB)
+exportClasses(HMMVB)
+exportClasses(HMM)
+exportClasses(HMMVBclust)
+exportClasses(HMMVBBIC)
+exportMethods(plot)
+exportMethods(show)
+export(getNb,
+       getDim,
+       getBdim, 
+       getNumst, 
+       getVarorder, 
+       getPrenumst, 
+       getHmmParam, 
+       getVb,
+       getHmmChain, 
+       getClustParam, 
+       getBIC, 
+       getDiagCov, 
+       getClsid, 
+       getSize)
