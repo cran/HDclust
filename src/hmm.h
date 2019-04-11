@@ -23,6 +23,8 @@
 /* Written by Jia Li <jiali@stat.psu.edu>, April 7, 2017                                    */ 
 /*                                                                                          */
 /*==========================================================================================*/
+#ifndef HMM_H
+#define HMM_H
 
 #include <math.h>
 #include <stdio.h>
@@ -212,3 +214,4 @@ extern void groupmode(double **mode, int dim, int num, int *cls, int *numcls,
 		      double *sigma, double threshold, int meandist);
 extern int FindCluster(double *mode, int dim, int rncls, double **refmode, 
 		       double *sigma, double threshold, int meandist);
+#endif

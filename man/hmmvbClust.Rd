@@ -4,8 +4,8 @@
 \alias{hmmvbClust}
 \title{Cluster data with HMM-VB}
 \usage{
-hmmvbClust(data, model = NULL, control = clustControl(), rfsClust = NULL,
-  nthread = 1, bicObj = NULL)
+hmmvbClust(data, model = NULL, control = clustControl(),
+  rfsClust = NULL, nthread = 1, bicObj = NULL)
 }
 \arguments{
 \item{data}{A numeric vector, matrix, or data frame of observations.

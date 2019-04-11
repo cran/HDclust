@@ -6,7 +6,6 @@
 \alias{getNumst,VB-method}
 \alias{getNumst,HMM-method}
 \alias{getNumst,HMMVB-method}
-\alias{getNumst,HMMVBBIC-method}
 \title{Accessor for 'numst' slot}
 \usage{
 getNumst(object)
@@ -16,8 +15,6 @@ getNumst(object)
 \S4method{getNumst}{HMM}(object)
 
 \S4method{getNumst}{HMMVB}(object)
-
-\S4method{getNumst}{HMMVBBIC}(object)
 }
 \arguments{
 \item{object}{Object of class "VB", "HMM" or "HMMVB".}
@@ -44,13 +41,5 @@ Vb <- vb(2, dim=40, bdim=c(10,30), numst=c(3,5), varorder=list(c(1:10),c(11:40))
 set.seed(12345)
 hmmvb <- hmmvbTrain(sim3[,1:40], VbStructure=Vb)
 getNumst(hmmvb)  
-    
-\donttest{
-# accessing numst used in model selection in instance of class HMMVBBIC 
-data("sim3")
-Vb <- vb(2, dim=40, bdim=c(10,30), numst=c(3,5), varorder=list(c(1:10),c(11:40)))
-set.seed(12345)
-modelBIC <- hmmvbBIC(sim3[,1:40], VbStructure=Vb)
-getNumst(modelBIC)}
     
 }

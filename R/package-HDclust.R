@@ -5,11 +5,11 @@
 #' fitted via Baum-Welch algorithm. Clustering is performed by the Modal Baum-Welch
 #' algorithm (MBW), which finds modes of the density function.
 #' @details 
-#' For a quick introduction to \pkg{HDclust} see the vignette \href{../doc/HDclust.html}{\code{vignette("help", package = "HDclust")}}.
+#' For a quick introduction to \pkg{HDclust} see the vignette \href{../doc/HDclust.html}{\code{vignette("HDclust")}}.
 #' @docType package
-#' @author{ Jia Li, Lin Lin and Yevhen Tupikov.
+#' @author{ Lin Lin, Yevhen Tupikov, Lixiang Zhang and Jia Li.
 #' 
-#' Maintainer: Yevhen Tupikov \email{yzt116@@psu.edu}
+#' Maintainer: Jia Li \email{jiali@@psu.edu}
 #' }
 #' @references 
 #' Lin Lin and Jia Li, "Clustering with hidden Markov model on variable blocks," \strong{Journal of Machine Learning Research}, 18(110):1-49, 2017.

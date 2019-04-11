@@ -1,6 +1,6 @@
 ---
 title: "A quick tour of **HDclust**"
-author: "Yevhen Tupikov"
+author: "Yevhen Tupikov, Lixiang Zhang"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -17,14 +17,18 @@ knitr::opts_chunk$set(
 ```
 
 ## Introduction 
-**HDclust** is a contributed R package for clustering high dimensional data using Hidden Markov model on Variable Blocks (HMM-VB). The clustering is performed by finding the density modes with Modal Baum-Welch algorithm (MBW). The algorithm can take into account the sequential dependence among the groups of variables, which is important, for example, for analyzing flow and mass cytometry data. The package provides functions to train HMM-VB model with 
-known or unknown variable block structure; search for the optimal number of states of HMM-VB model using BIC; cluster data with trained HMM-VB model; and align clustering results for different data sets using the same HMM-VB model.
+**HDclust** is a contributed R package for clustering high dimensional data using Hidden Markov model on Variable Blocks (HMM-VB). Briefly, the model consists of sequentially dependent groups of variables , i.e., the variable blocks. Each variable block follows a Gaussian mixture distribution. Statistical dependence among
+the blocks is modelled by the Markov process of the underlying states (i.e. the mixture component identities). The Baum-Welch (BW) estimation algorithm is used to fit the model to data. The clustering is performed by finding the density modes with Modal Baum-Welch algorithm (MBW). In the case of a single variable block the model reduces to a regular Gaussian Mixture Model (GMM).
+The package provides functions to train HMM-VB model with known or unknown variable block structure; search for the optimal number of states of HMM-VB model using BIC; cluster data with trained HMM-VB model; and align clustering results for different data sets using the same HMM-VB model.
 
+To illustrate **HDclust** functionality we will use a standard R data set "faithful" from package 'datasets', and two synthetic data sets sim2 and sim3. sim2 is a 5-dimensional data set with 5000 data points. Samples were drawn from a 10-component Gaussian Mixture Model (GMM).
+By specific choice of the means, the data contains 10 distinct clusters. sim3 is a 40-dimensional data set. The first 10 dimensions were generated from a 3-component Gaussian
+Mixture Model (GMM). The remaining 30 dimensions were generated from a 5-component GMM. By specific design of the means, covariance matrices and transition probabilities, the data contain 5 distinct clusters. For more details on sim2 and sim3 see the reference.
 ```{r, fig.show='hold'}
 library(HDclust)
 ```
 ## Define a variable block structure
-Dependence among the groups of variables is defined in a variable block structure. When there is only a single variable block in the structure, the model reduces to a regular Gaussian mixture model (GMM).
+Dependence among the groups of variables is defined in a variable block structure. When there is only a single variable block in the structure, the model reduces to a regular GMM.
 Note, however, that clustering is performed by finding density modes, so results will be different from traditional GMM clustering.
 ```{r}
 # variable structure with one variable block of 3 variables and two mixture components, which corresponds to GMM model
@@ -54,7 +58,7 @@ show(modelBIC)
 ```
 Model selection results can be visualized in the following way:
 ```{r fig1, fig.height = 5, fig.width = 5}
-plot(getNumst(modelBIC), getBIC(modelBIC), xlab='numst', ylab='BIC')
+plot(modelBIC, xlab='# mixture components per block', ylab='BIC')
 ```
 
 Second option is to provide a list with configurations for the number of states in variable blocks.
@@ -71,6 +75,12 @@ modelBIC <- hmmvbBIC(sim3[,1:40], VbStructure=Vb, configList=configs)
 show(modelBIC)
 ```
 In both cases, the output is an object of class **HMMVBBIC**  that contains HMM-VB parameters for the optimal configuration. The optimal HMM-VB can be accessed with **getOptHMMVB**  method.
+
+If you want to see more information like loglikelihood for each data point, you can use a get function like **getLoglikehd()**.
+```{r}
+# we just illustrate the loglikelihood of the first 10 data points beacause the data set is huge
+getLoglikehd(modelBIC)[1:10]
+```
 
 ## Train an HMM-VB model
 There are two ways to train an HMM-VB model. One way is to use a variable block structure motivated by domain knowledge.
@@ -89,8 +99,6 @@ diagCov <- getDiagCov(hmmvb) # indicator whether covariance matrices are diagona
 bic <- getBIC(hmmvb) # BIC value
 
 # below we show HMM-VB parameters for the first variable block
-hmmChain <- getHmmChain(hmmvb)
-
 numst <- getNumst(hmmChain[[1]]) # number of mixture components in variable block
 prenumst <- getPrenumst(hmmChain[[1]]) # number of mixture components in the previous variable block
 hmmParam <- getHmmParam(hmmChain[[1]]) # list with priors, transition probabilities, means, covariance matrices and other parameters of all states of HMM
@@ -130,6 +138,13 @@ show(clust)
 plot(faithful[,1], faithful[,2], xlab='eruptions', ylab='waiting', col=getClsid(clust))
 ```
 
+**hmmvbClust()** returns an object of type **HMMVBclust** that contains the clustering results, including Viterbi sequences and  cluster modes.
+```{r}
+clustParam <- getClustParam(clust)
+mode <- clustParam$mode # a matrix with cluster modes
+vseq <- clustParam$vseq # A list with integer vectors representing distinct Viterbi sequences for the dataset
+```
+
 If variable block structure is unknown, we first search for it, then refine number of mixture components with model selection, and perform the clustering.
 ```{r, fig.show='hold', results='hide'}
 # If variable block structure is unknown
@@ -146,10 +161,17 @@ modelBIC <- hmmvbBIC(sim2[,1:5], VbStructure=getVb(hmmvb), numst=1:15, nthread=4
 clust <- hmmvbClust(data=sim2[,1:5], bicObj=modelBIC)
 show(clust)
 ```
-Clustering results can also be plotted in 2 dimensional space reduced by PCA:
+Clustering results can also be plotted using two visualization algorithms.
+
+By default results will be plotted using t-SNE algorithm from **Rtsne** package.
 ```{r fig3, fig.height = 5, fig.width = 5}
 palette(c(palette(), "purple", "brown")) # extend palette to show all 10 clusters
 plot(clust)
+```
+
+Results can also be shown in 2 dimensional space reduced by PCA:
+```{r fig4, fig.height = 5, fig.width = 5}
+plot(clust, method='PCA')
 ```
 
 ## Cluster alignment
@@ -174,6 +196,37 @@ show(clust1)
 clust2 <- hmmvbClust(X2[1:40], model=hmmvb, rfsClust=getClustParam(clust1))
 
 show(clust2)
+```
+
+If you also want to compute the loglikelihood for the new data set, it can be realized by setting the parameter getlikelh to be TRUE in **clustControl()**:
+```{r, fig.show='hold'}
+clust2 <- hmmvbClust(X2[1:40], model=hmmvb, rfsClust=getClustParam(clust1), control=clustControl(getlikelh = TRUE))
+# we just illustrate the loglikelihood of the first 10 data points beacause the data set is huge
+getLoglikehd(clust2)[1:10]
+```
+
+## Solution for slow data clustering with many changes in mode merging parameters
+If data clustering takes a significant amount of time and many changes in mode merging parameters are required to achieve the desired clustering result, we recommend to use **hmmvbFindModes()** and **clustModes()**. Function **hmmvbFindModes()** finds all density modes in the data, and **clustModes()** clusters the modes using hierarchical clustering. Under the hood **clustModes()** uses **dist()**, **hclust()** and **cutree()** calls from the package **stats**, and a user can specify parameters for all of them with **dist.args**, **hclust.args** and **cutree.args** arguments.
+```{r, fig.show='hold'}
+data("sim3")
+
+set.seed(12345)
+Vb <- vb(2, 40, c(10,30), c(3,5), list(c(1:10),c(11:40)))
+
+# train HMM-VB
+hmmvb <- hmmvbTrain(sim3[1:40], VbStructure=Vb)
+
+# find all density modes
+modes <- hmmvbFindModes(sim3[1:40], model=hmmvb)
+show(modes)
+
+# cluster density modes
+mergedModes <- clustModes(modes, cutree.args = list(h=1.0))
+
+show(mergedModes)
+```
+```{r fig5, fig.height = 5, fig.width = 5}
+plot(mergedModes)
 ```
 
 # References

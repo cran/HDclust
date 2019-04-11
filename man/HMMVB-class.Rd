@@ -31,6 +31,8 @@ for each variable block.}
 \item{\code{diagCov}}{A logical value indicating whether or not covariance matrices 
 for mixture models are diagonal.}
 
+\item{\code{Loglikehd}}{Loglikelihood value for each data point.}
+
 \item{\code{BIC}}{BIC value for provided variable block structure or optimal BIC value
 for found variable block structure.}
 }}

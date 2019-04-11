@@ -4,7 +4,7 @@
 \alias{mkhmmvb}
 \title{Make an instance of "HMMVB" class.}
 \usage{
-mkhmmvb(VbStructure, HmmChain, BIC, diagCov)
+mkhmmvb(VbStructure, HmmChain, BIC, diagCov, Loglikehd)
 }
 \arguments{
 \item{VbStructure}{An object of class 'VB' that contains variable block structure.}
@@ -17,6 +17,8 @@ for found variable block structure.}
 
 \item{diagCov}{A logical value indicating whether or not covariance matrices 
 for mixture models are diagonal.}
+
+\item{Loglikehd}{Loglikelihood value for each data point}
 }
 \value{
 An instance of class "HMMVB"

@@ -11,7 +11,7 @@ fitted via Baum-Welch algorithm. Clustering is performed by the Modal Baum-Welch
 algorithm (MBW), which finds modes of the density function.
 }
 \details{
-For a quick introduction to \pkg{HDclust} see the vignette \href{../doc/HDclust.html}{\code{vignette("help", package = "HDclust")}}.
+For a quick introduction to \pkg{HDclust} see the vignette \href{../doc/HDclust.html}{\code{vignette("HDclust")}}.
 }
 \examples{
 data("sim3")

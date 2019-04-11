@@ -4,7 +4,8 @@
 \alias{clustControl}
 \title{Parameters for MBM clustering algorithm.}
 \usage{
-clustControl(minSize = 1, modeTh = 0.01, useL1norm = FALSE)
+clustControl(minSize = 1, modeTh = 0.01, useL1norm = FALSE,
+  getlikelh = FALSE)
 }
 \arguments{
 \item{minSize}{Minimum cluster size. Clusters that contain the number of data points
@@ -15,6 +16,9 @@ promote merging of different clusters.}
 
 \item{useL1norm}{A logical value indicating whether or not L1 norm will be 
 used to calculate the distance.}
+
+\item{getlikelh}{A logical value indicating whether or not to calculate the
+loglikelihood for every data point.}
 }
 \value{
 The named list with parameters.

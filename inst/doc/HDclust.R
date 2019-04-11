@@ -28,7 +28,7 @@ modelBIC <- hmmvbBIC(faithful, VbStructure=Vb)
 show(modelBIC)
 
 ## ----fig1, fig.height = 5, fig.width = 5---------------------------------
-plot(getNumst(modelBIC), getBIC(modelBIC), xlab='numst', ylab='BIC')
+plot(modelBIC, xlab='# mixture components per block', ylab='BIC')
 
 ## ---- results='hide'-----------------------------------------------------
 # user-provided configurations for the number of states in each block
@@ -40,6 +40,10 @@ modelBIC <- hmmvbBIC(sim3[,1:40], VbStructure=Vb, configList=configs)
 
 ## ------------------------------------------------------------------------
 show(modelBIC)
+
+## ------------------------------------------------------------------------
+# we just illustrate the loglikelihood of the first 10 data points beacause the data set is huge
+getLoglikehd(modelBIC)[1:10]
 
 ## ------------------------------------------------------------------------
 data("sim3")
@@ -55,8 +59,6 @@ diagCov <- getDiagCov(hmmvb) # indicator whether covariance matrices are diagona
 bic <- getBIC(hmmvb) # BIC value
 
 # below we show HMM-VB parameters for the first variable block
-hmmChain <- getHmmChain(hmmvb)
-
 numst <- getNumst(hmmChain[[1]]) # number of mixture components in variable block
 prenumst <- getPrenumst(hmmChain[[1]]) # number of mixture components in the previous variable block
 hmmParam <- getHmmParam(hmmChain[[1]]) # list with priors, transition probabilities, means, covariance matrices and other parameters of all states of HMM
@@ -87,6 +89,11 @@ show(clust)
 ## ----fig2, fig.height = 5, fig.width = 5---------------------------------
 plot(faithful[,1], faithful[,2], xlab='eruptions', ylab='waiting', col=getClsid(clust))
 
+## ------------------------------------------------------------------------
+clustParam <- getClustParam(clust)
+mode <- clustParam$mode # a matrix with cluster modes
+vseq <- clustParam$vseq # A list with integer vectors representing distinct Viterbi sequences for the dataset
+
 ## ---- fig.show='hold', results='hide'------------------------------------
 # If variable block structure is unknown
 data("sim2")
@@ -105,6 +112,9 @@ show(clust)
 ## ----fig3, fig.height = 5, fig.width = 5---------------------------------
 palette(c(palette(), "purple", "brown")) # extend palette to show all 10 clusters
 plot(clust)
+
+## ----fig4, fig.height = 5, fig.width = 5---------------------------------
+plot(clust, method='PCA')
 
 ## ---- fig.show='hold'----------------------------------------------------
 data("sim3")
@@ -125,4 +135,30 @@ show(clust1)
 clust2 <- hmmvbClust(X2[1:40], model=hmmvb, rfsClust=getClustParam(clust1))
 
 show(clust2)
+
+## ---- fig.show='hold'----------------------------------------------------
+clust2 <- hmmvbClust(X2[1:40], model=hmmvb, rfsClust=getClustParam(clust1), control=clustControl(getlikelh = TRUE))
+# we just illustrate the loglikelihood of the first 10 data points beacause the data set is huge
+getLoglikehd(clust2)[1:10]
+
+## ---- fig.show='hold'----------------------------------------------------
+data("sim3")
+
+set.seed(12345)
+Vb <- vb(2, 40, c(10,30), c(3,5), list(c(1:10),c(11:40)))
+
+# train HMM-VB
+hmmvb <- hmmvbTrain(sim3[1:40], VbStructure=Vb)
+
+# find all density modes
+modes <- hmmvbFindModes(sim3[1:40], model=hmmvb)
+show(modes)
+
+# cluster density modes
+mergedModes <- clustModes(modes, cutree.args = list(h=1.0))
+
+show(mergedModes)
+
+## ----fig5, fig.height = 5, fig.width = 5---------------------------------
+plot(mergedModes)
 

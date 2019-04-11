@@ -178,8 +178,7 @@ hmm <- function(dim, numst, prenumst,
 
 
 ## documentation in ./man/HMMVB-class.Rd
-setClass("HMMVB", slots=c(VbStructure="VB", HmmChain="list", BIC="numeric", diagCov="logical"))
-
+setClass("HMMVB", slots=c(VbStructure="VB", HmmChain="list", BIC="numeric", diagCov="logical", Loglikehd="numeric"))
 
 #' @title Make an instance of "HMMVB" class.
 #' @name mkhmmvb
@@ -192,9 +191,10 @@ setClass("HMMVB", slots=c(VbStructure="VB", HmmChain="list", BIC="numeric", diag
 #' for mixture models are diagonal.
 #' @param BIC BIC value for provided variable block structure or optimal BIC value
 #' for found variable block structure.
+#' @param Loglikehd Loglikelihood value for each data point
 #' @return An instance of class "HMMVB"
 #' @keywords internal
-mkhmmvb <- function(VbStructure, HmmChain, BIC, diagCov){
+mkhmmvb <- function(VbStructure, HmmChain, BIC, diagCov, Loglikehd){
   
   if (length(HmmChain) != VbStructure@nb)
     stop("Number of HMM models doesn't match nb in variable block structure!\n")
@@ -213,17 +213,17 @@ mkhmmvb <- function(VbStructure, HmmChain, BIC, diagCov){
   if (!is.logical(diagCov) ||  (length(diagCov)!=1))
     stop("diagCov should be a scalar logical")
   
-  return (new("HMMVB", VbStructure=VbStructure, HmmChain=HmmChain, BIC=BIC, diagCov=diagCov))
+  return (new("HMMVB", VbStructure=VbStructure, HmmChain=HmmChain, BIC=BIC, diagCov=diagCov, Loglikehd=Loglikehd))
 }
 
 ## documentation in ./man/HMMVBBIC-class.Rd
 setClass("HMMVBBIC", slots=c(numst="numeric",
                                BIC="numeric",
-                               configList="list",
                                optHMMVB="HMMVB"))
 
 ## documentation in ./man/HMMVBclust-class.Rd
 setClass("HMMVBclust", slots=c(data="matrix",
                                               clustParam="list",
                                               clsid="numeric",
-                                              size="numeric"))
+                                              size="numeric",
+                                              Loglikehd="numeric"))

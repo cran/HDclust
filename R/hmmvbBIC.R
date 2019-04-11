@@ -76,18 +76,24 @@ hmmvbBIC <- function(data, VbStructure, configList=NULL, numst = 1:10,
     BIC <- rep(0, length(configList))
     
     pb <- txtProgressBar(min=0, max=length(configList), style=3)
-    ipbar <- 0
+    ipbar <- 1
     
     minBIC = 1e100
     optHMMVB = NULL
     
     for (i in 1:length(configList)){
+      setTxtProgressBar(pb, ipbar)
+      
       NewVb = vb(VbStructure@nb, VbStructure@dim, VbStructure@bdim,
                  configList[[i]], VbStructure@varorder)
       
       result <- tryCatch({
         
-        HmmVb <- rcpp_trainHmmVb(t(data), NewVb, vbSearchControl(), trControl, nthread, vb, hmm, mkhmmvb)
+        if (i == length(configList))
+          HmmVb <- rcpp_trainHmmVb(t(data), NewVb, vbSearchControl(), trControl, nthread, vb, hmm, mkhmmvb, TRUE)
+        else
+          HmmVb <- rcpp_trainHmmVb(t(data), NewVb, vbSearchControl(), trControl, nthread, vb, hmm, mkhmmvb, FALSE)
+        
         
         if (HmmVb@BIC < minBIC){
           minBIC = HmmVb@BIC
@@ -105,11 +111,10 @@ hmmvbBIC <- function(data, VbStructure, configList=NULL, numst = 1:10,
       
       BIC[i] = result
       
-      setTxtProgressBar(pb, ipbar)
       ipbar <- ipbar + 1
     }
     
-    return(new("HMMVBBIC", BIC=BIC, configList=configList, numst=numeric(0), optHMMVB=optHMMVB))
+    return(new("HMMVBBIC", BIC=BIC, numst=numeric(0), optHMMVB=optHMMVB))
   }
   
   else{
@@ -118,12 +123,13 @@ hmmvbBIC <- function(data, VbStructure, configList=NULL, numst = 1:10,
     
     BIC <- rep(0, length(numst))
     pb <- txtProgressBar(min=0, max=length(numst), style=3)
-    ipbar <- 0
+    ipbar <- 1
     
     minBIC = 1e100
     optHMMVB = NULL
     
     for (i in 1:length(numst)){
+      setTxtProgressBar(pb, ipbar)
       newnumst = rep(numst[i], VbStructure@nb)
       
       NewVb = vb(VbStructure@nb, VbStructure@dim, VbStructure@bdim,
@@ -131,7 +137,10 @@ hmmvbBIC <- function(data, VbStructure, configList=NULL, numst = 1:10,
       
       result <- tryCatch({
         
-        HmmVb <- rcpp_trainHmmVb(t(data), NewVb, vbSearchControl(), trControl, nthread, vb, hmm, mkhmmvb)
+        if (i == length(numst))
+          HmmVb <- rcpp_trainHmmVb(t(data), NewVb, vbSearchControl(), trControl, nthread, vb, hmm, mkhmmvb, TRUE)
+        else
+          HmmVb <- rcpp_trainHmmVb(t(data), NewVb, vbSearchControl(), trControl, nthread, vb, hmm, mkhmmvb, FALSE)
         
         if (HmmVb@BIC < minBIC){
           minBIC = HmmVb@BIC
@@ -149,10 +158,10 @@ hmmvbBIC <- function(data, VbStructure, configList=NULL, numst = 1:10,
       
       BIC[i] = result
       
-      setTxtProgressBar(pb, ipbar)
+     
       ipbar <- ipbar + 1
     }
     
-    return(new("HMMVBBIC", BIC=BIC, configList=list(), numst=numst, optHMMVB=optHMMVB))
+    return(new("HMMVBBIC", BIC=BIC, numst=numst, optHMMVB=optHMMVB))
   }
 }

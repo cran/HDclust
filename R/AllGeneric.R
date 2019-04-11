@@ -71,6 +71,13 @@ setGeneric("getHmmChain", function(object) {standardGeneric("getHmmChain")})
 #' @export getBIC
 setGeneric("getBIC", function(object) {standardGeneric("getBIC")})
 
+#' @title Accessor for 'Loglikehd' slot.
+#' @description This function outputs Loglikelihood for each data point in a trained HMM-VB model or Loglikelihood for a new dataset in a HMM-VB model.
+#' @name getLoglikehd
+#' @param object Object of class "HMMVB", "HMMVBBIC" "HMMVBclust".
+#' @export getLoglikehd
+setGeneric("getLoglikehd", function(object) {standardGeneric("getLoglikehd")})
+
 #' @title Accessor for 'diagCov' slot.
 #' @description This function outputs diagCov logical indicator of diagonal covariance 
 #' matrices for HMM-VB model.
@@ -99,13 +106,6 @@ setGeneric("getClsid", function(object) {standardGeneric("getClsid")})
 #' @param object Object of class "HMMVBclust".
 #' @export getSize
 setGeneric("getSize", function(object) {standardGeneric("getSize")})
-
-#' @title Accessor for 'configList' slot.
-#' @description This function outputs list with configurations for the number of states in variable blocks used in model selection.
-#' @name getConfigList
-#' @param object Object of class "HMMVBBIC".
-#' @export getConfigList
-setGeneric("getConfigList", function(object) {standardGeneric("getConfigList")})
 
 #' @title Accessor for 'optHMMVB' slot.
 #' @description This function outputs the optimal HMM-VB found via BIC model selection.

@@ -5,10 +5,14 @@ importFrom(graphics, "plot")
 importFrom(stats, "prcomp")
 importFrom("methods", "getClass", "is", "new", "show")
 importFrom("utils", "setTxtProgressBar", "txtProgressBar")
+importFrom("stats", "dist", "hclust", "cutree", "as.dendrogram")
 import(RcppProgress)
+import(Rtsne)
 
 export(hmmvbTrain)
 export(hmmvbClust)
+export(hmmvbFindModes)
+export(clustModes)
 export(vbSearchControl)
 export(trainControl)
 export(clustControl)
@@ -34,4 +38,6 @@ export(getNb,
        getBIC, 
        getDiagCov, 
        getClsid, 
-       getSize)
+       getSize,
+       getOptHMMVB,
+       getLoglikehd)

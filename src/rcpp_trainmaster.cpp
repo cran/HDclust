@@ -14,7 +14,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
                        const List &searchControl, const List &trainControl, IntegerVector nthread,
-                       Function VB, Function HMM, Function HMMVB) {
+                       Function VB, Function HMM, Function HMMVB, bool bprint = true) {
   
   ///////////////////
   // parse data
@@ -193,6 +193,14 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
   #ifdef _OPENMP
   int num_threads = as<int>(nthread);
   omp_set_num_threads(num_threads);
+  
+  if ((bprint) && (num_threads > 1))
+	Rcout << "\nNumber of threads used: " << num_threads << std::endl;
+  #else
+  int num_threads = as<int>(nthread);
+  
+  if ((bprint)&&(num_threads > 1))
+	Rcout << "\nMore than one thread is used with OpenMP not configured. Make sure your compiler supports OpenMP and reinstall the package" << std::endl;
   #endif
 
   
@@ -282,27 +290,31 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
   else
     NewVbStructure = VbStructure;
 
+  // output loglikelihood
+  NumericVector loglh(nseq);
+  for (int i=0;i<nseq;i++){
+      loglh[i]=loglikehd[i];
+  }
+    
   // free memory  
   free(u);
-  free(vlist0);
   free(loglikehd);
   freeccm(&md);
   free(md);
   
-  if (!Rf_isNull(searchControl["perm"]))
-	free(vlist0);
+  if (!Rf_isNull(searchControl["perm"])) free(vlist0);
   
   if (Rf_isNull(VbStructure)){
-	free(bdim);
-	
-	for (int i = 0; i < nb; i++)
-		free(var[i]);
+  	free(bdim);
+  	
+  	for (int i = 0; i < nb; i++)
+  		free(var[i]);
   }
   
   free(var);
   
   
-  S4 HmmVb = HMMVB(Named("HmmChain", HmmChain), Named("VbStructure", NewVbStructure), Named("BIC", -2*lhsum), Named("diagCov", LogicalVector(wrap(DIAGCOV))));
+  S4 HmmVb = HMMVB(Named("HmmChain", HmmChain), Named("VbStructure", NewVbStructure), Named("BIC", -2*lhsum), Named("diagCov", LogicalVector(wrap(DIAGCOV))), Named("Loglikehd",loglh));
   
   
   return(HmmVb);
