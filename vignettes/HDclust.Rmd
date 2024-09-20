@@ -105,17 +105,17 @@ hmmParam <- getHmmParam(hmmChain[[1]]) # list with priors, transition probabilit
 
 ```
 ## Train an HMM-VB model with unknown variable block structure
-If a variable block structure is unknown, one can search for it with **hmmvbTrain()**  function. The search is performed by a greedy algorithm. Thus multiple permutations of variables are needed for the best estimation of the variable block structure. With many permutations, the search becomes a time-consuming process, and to accelerate it, we advice to use as many cores as your machine has. This is done with parameter **nthread**, which we set to 4 in the example below, since our machine has 4 cores.
+If a variable block structure is unknown, one can search for it with **hmmvbTrain()**  function. The search is performed by a greedy algorithm. Thus multiple permutations of variables are needed for the best estimation of the variable block structure. With many permutations, the search becomes a time-consuming process, and to accelerate it, we advice to use as many cores as your machine has. This is done with parameter **nthread**.
 ```{r}
 data("sim2")
 set.seed(12345)
-hmmvb <- hmmvbTrain(sim2[1:5], searchControl=vbSearchControl(nperm=5), nthread=4)
+hmmvb <- hmmvbTrain(sim2[1:5], searchControl=vbSearchControl(nperm=5), nthread=1)
 show(hmmvb)
 ```
 Suggested variable block structure has a single variable block. That is in hand with the data, which was generated from a mixture of 10 Gaussian components.
 After finding the variable block structure, we recommend to run model selection to refine the number of mixture components:
 ```{r, results='hide'}
-modelBIC <- hmmvbBIC(sim2[1:5], VbStructure=getVb(hmmvb), numst=1:15, nthread=4)
+modelBIC <- hmmvbBIC(sim2[1:5], VbStructure=getVb(hmmvb), numst=1:15, nthread=1)
 ```
 ```{r}
 show(modelBIC)
@@ -152,10 +152,10 @@ data("sim2")
 set.seed(12345)
 
 # find variable block structure
-hmmvb <- hmmvbTrain(sim2[,1:5], searchControl=vbSearchControl(nperm=5), nthread=4)
+hmmvb <- hmmvbTrain(sim2[,1:5], searchControl=vbSearchControl(nperm=5), nthread=1)
 
 # refine number of states in variable block structure by model selection
-modelBIC <- hmmvbBIC(sim2[,1:5], VbStructure=getVb(hmmvb), numst=1:15, nthread=4)
+modelBIC <- hmmvbBIC(sim2[,1:5], VbStructure=getVb(hmmvb), numst=1:15, nthread=1)
 ```
 ```{r}
 clust <- hmmvbClust(data=sim2[,1:5], bicObj=modelBIC)

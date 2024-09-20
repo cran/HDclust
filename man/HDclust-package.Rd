@@ -28,8 +28,8 @@ Lin Lin and Jia Li, "Clustering with hidden Markov model on variable blocks," \s
 \code{\link{hmmvbTrain}}, \code{\link{hmmvbClust}}
 }
 \author{
-{ Jia Li, Lin Lin and Yevhen Tupikov.
+{ Lin Lin, Yevhen Tupikov, Lixiang Zhang and Jia Li.
 
-Maintainer: Yevhen Tupikov \email{yzt116@psu.edu}
+Maintainer: Jia Li \email{jiali@psu.edu}
 }
 }

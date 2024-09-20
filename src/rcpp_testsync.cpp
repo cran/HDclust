@@ -64,14 +64,14 @@ using namespace Rcpp;
 // void freeClust(double **mode, double *sigma,
 // 				int ncls, int ndseq, int **path, int *cls)
 // {
-// 	free(cls);
-// 	free(sigma);
+// 	R_Free(cls);
+// 	R_Free(sigma);
 // 
-// 	for (int i = 0; i < ncls; i++) free(mode[i]);
-// 	free(mode);
+// 	for (int i = 0; i < ncls; i++) R_Free(mode[i]);
+// 	R_Free(mode);
 // 
-// 	for (int i = 0; i < ndseq; i++) free(path[i]);
-// 	free(path);
+// 	for (int i = 0; i < ndseq; i++) R_Free(path[i]);
+// 	R_Free(path);
 // }
 
 void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
@@ -81,26 +81,42 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 	*rnseq = rfsClust["ndseq"];
 	
 	IntegerVector rvseqid = rfsClust["vseqid"];
-	*refcls = (int *)calloc(rvseqid.size(), sizeof(int));
+	if (rvseqid.size()<0||rvseqid.size()>SIZE_MAX) {
+	  Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+	}
+	*refcls = (int *)R_Calloc((size_t)rvseqid.size(), int);
 	std::copy(rvseqid.begin(), rvseqid.end(), *refcls);
 	
 	NumericMatrix rmode = rfsClust["mode"];
-	*refmode = (double **)calloc(rmode.nrow(), sizeof(double *));
+	if (rmode.nrow()<0||rmode.nrow()>SIZE_MAX) {
+	  Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+	}
+	*refmode = (double **)R_Calloc((size_t)rmode.nrow(), double *);
 	for (int i = 0; i < rmode.nrow(); i++){
-		(*refmode)[i] = (double *)calloc(rmode.ncol(), sizeof(double));
-		std::copy(rmode(i,_).begin(), rmode(i,_).end(), (*refmode)[i]);
+	  if (rmode.ncol()<0||rmode.ncol()>SIZE_MAX) {
+	    Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+	  }
+	  (*refmode)[i] = (double *)R_Calloc((size_t)rmode.ncol(), double);
+	  std::copy(rmode(i,_).begin(), rmode(i,_).end(), (*refmode)[i]);
 	}
 	
 	
 	std::vector<IntegerVector> rvseq = rfsClust["vseq"];
-	*refpath = (int **)calloc(*rnseq, sizeof(int *));
+	if (*rnseq<0||*rnseq>SIZE_MAX) {
+	  Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+	}
+	*refpath = (int **)R_Calloc((size_t)*rnseq, int *);
 	for (int i = 0; i < *rnseq; i++){
-		(*refpath)[i] = (int *)calloc(rvseq.size(), sizeof(int));
+		(*refpath)[i] = (int *)R_Calloc((size_t)rvseq.size(), int);
 		std::copy(rvseq[i].begin(), rvseq[i].end(), (*refpath)[i]);
 	}
 	
 	NumericVector rsigma = rfsClust["sigma"];
-	*refsigma = (double *)calloc(rsigma.size(), sizeof(double));
+	if (rsigma.size()<0||rsigma.size()>SIZE_MAX) {
+	  Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+	  
+	}
+	*refsigma = (double *)R_Calloc((size_t)rsigma.size(), double);
 	std::copy(rsigma.begin(), rsigma.end(), *refsigma);
 }
 
@@ -108,8 +124,8 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 // {	  
 // 	md->nb = VbStructure.slot("nb");
 // 	
-// 	md->bdim = (int *)calloc(md->nb,sizeof(int));  
-// 	md->numst = (int *)calloc(md->nb,sizeof(int));
+// 	md->bdim = (int *)R_Calloc((size_t)md->nb,int);  
+// 	md->numst = (int *)R_Calloc((size_t)md->nb,int);
 // 	
 // 	IntegerVector bstrBDim = VbStructure.slot("bdim");
 // 	IntegerVector bstrNumStates = VbStructure.slot("numst");
@@ -129,9 +145,9 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 // 
 //     std::vector<IntegerVector> bstrVarOrder = VbStructure.slot("varorder");
 // 	
-//     md->var = (int **)calloc(md->nb,sizeof(int *));
+//     md->var = (int **)R_Calloc((size_t)md->nb,int *);
 // 	for (int i=0; i < md->nb; i++){
-// 		md->var[i] = (int *)calloc(md->bdim[i],sizeof(int));
+// 		md->var[i] = (int *)R_Calloc((size_t)md->bdim[i],int);
 // 		std::copy(bstrVarOrder[i].begin(), bstrVarOrder[i].end(), md->var[i]);
 // 		
 // 		for (int j = 0; j < md->bdim[i]; j++)
@@ -139,9 +155,9 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 // 	}
 // 
 //     // Set up the redundant fields for convenience of computation
-// 	md->cbdim=(int *)calloc(md->nb,sizeof(int));
+// 	md->cbdim=(int *)R_Calloc((size_t)md->nb,int);
 // 	md->cbdim[0]=0;
-// 	md->cnumst=(int *)calloc(md->nb,sizeof(int));
+// 	md->cnumst=(int *)R_Calloc((size_t)md->nb,int);
 // 	md->cnumst[0]=0;
 // 	for (int i = 0; i < md->nb-1; i++) {
 // 		md->cbdim[i+1] = md->cbdim[i] + md->bdim[i];
@@ -151,9 +167,9 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 // 
 // void parseHmmChain(const List &HmmChain, CondChain *md)
 // {
-// 	md->mds=(HmmModel **)calloc(md->nb,sizeof(HmmModel *));
+// 	md->mds=(HmmModel **)R_Calloc((size_t)md->nb,HmmModel *);
 //     for (int i = 0; i < md->nb; i++) {
-// 		md->mds[i]=(HmmModel *)calloc(1,sizeof(HmmModel));
+// 		md->mds[i]=(HmmModel *)R_Calloc(1,HmmModel);
 // 		
 // 		S4 Hmm = HmmChain[i];
 //     
@@ -163,15 +179,15 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 //   
 // 		NumericVector a00 = Hmm.slot("a00");
 // 		
-// 		md->mds[i]->a00 = (double *)calloc(md->mds[i]->numst,sizeof(double));
+// 		md->mds[i]->a00 = (double *)R_Calloc((size_t)md->mds[i]->numst,double);
 // 		std::copy(a00.begin(), a00.end(), md->mds[i]->a00);
 //   
 // 		NumericMatrix a = Hmm.slot("a");
 // 		
-// 		md->mds[i]->a = (double **)calloc(md->mds[i]->prenumst,sizeof(double *));
+// 		md->mds[i]->a = (double **)R_Calloc((size_t)md->mds[i]->prenumst,double *);
 // 		
 // 		for (int j = 0; j < md->mds[i]->prenumst; j++){
-// 			md->mds[i]->a[j] = (double *)calloc(md->mds[i]->numst,sizeof(double));
+// 			md->mds[i]->a[j] = (double *)R_Calloc((size_t)md->mds[i]->numst,double);
 // 			std::copy(a(j,_).begin(), a(j,_).end(), md->mds[i]->a[j]);
 // 		}
 // 		
@@ -181,30 +197,30 @@ void parseRefClust(const List &rfsClust,  double ***refmode, double **refsigma,
 // 		NumericVector sigmaDetLog = Hmm.slot("sigmaDetLog");
 //   
 // 		
-// 		md->mds[i]->stpdf=(GaussModel **)calloc(md->mds[i]->numst, sizeof(GaussModel *));
+// 		md->mds[i]->stpdf=(GaussModel **)R_Calloc((size_t)md->mds[i]->numst, GaussModel *);
 // 		
 // 		for (int j = 0; j < md->mds[i]->numst; j++){
-// 			md->mds[i]->stpdf[j]=(GaussModel *)calloc(1, sizeof(GaussModel));
+// 			md->mds[i]->stpdf[j]=(GaussModel *)R_Calloc(1, GaussModel);
 // 
 // 			md->mds[i]->stpdf[j]->exist = 1;
 // 			md->mds[i]->stpdf[j]->dim = Hmm.slot("dim");
 // 			
-// 			md->mds[i]->stpdf[j]->mean = (double *)calloc(md->mds[i]->stpdf[j]->dim,sizeof(double));
+// 			md->mds[i]->stpdf[j]->mean = (double *)R_Calloc((size_t)md->mds[i]->stpdf[j]->dim,double);
 // 			std::copy(mean(j,_).begin(), mean(j,_).end(), md->mds[i]->stpdf[j]->mean);
 // 			
 // 			md->mds[i]->stpdf[j]->sigma_det_log = sigmaDetLog[j];
 // 			
-// 			md->mds[i]->stpdf[j]->sigma = (double **)calloc(md->mds[i]->stpdf[j]->dim,sizeof(double *));
+// 			md->mds[i]->stpdf[j]->sigma = (double **)R_Calloc((size_t)md->mds[i]->stpdf[j]->dim,double *);
 // 			
 // 			for (int k =0; k<md->mds[i]->stpdf[j]->dim; k++){
-// 				md->mds[i]->stpdf[j]->sigma[k] = (double *)calloc(md->mds[i]->stpdf[j]->dim,sizeof(double));
+// 				md->mds[i]->stpdf[j]->sigma[k] = (double *)R_Calloc((size_t)md->mds[i]->stpdf[j]->dim,double);
 // 				std::copy((sigmaList[j])(k,_).begin(), (sigmaList[j])(k,_).end(), md->mds[i]->stpdf[j]->sigma[k]);
 // 			}
 // 			
-// 			md->mds[i]->stpdf[j]->sigma_inv = (double **)calloc(md->mds[i]->stpdf[j]->dim,sizeof(double *));
+// 			md->mds[i]->stpdf[j]->sigma_inv = (double **)R_Calloc((size_t)md->mds[i]->stpdf[j]->dim,double *);
 // 			
 // 			for (int k = 0; k < md->mds[i]->stpdf[j]->dim; k++){
-// 				md->mds[i]->stpdf[j]->sigma_inv[k] = (double *)calloc(md->mds[i]->stpdf[j]->dim,sizeof(double));
+// 				md->mds[i]->stpdf[j]->sigma_inv[k] = (double *)R_Calloc((size_t)md->mds[i]->stpdf[j]->dim,double);
 // 				std::copy((sigmaInvList[j])(k,_).begin(), (sigmaInvList[j])(k,_).end(), md->mds[i]->stpdf[j]->sigma_inv[k]);
 // 			}
 // 		}
@@ -220,17 +236,21 @@ List augmentrefcls(int rncls, int rnseq, double **refmode, double *sigmadat,
   double **newrefmode=NULL, **newrefmode2, **combmode;
   int *ct, rncls2, rnseq2, **newrefpath, *newrefcls, *newrefcls2;
 
+  if (numcls<0|| numcls>SIZE_MAX || dim<0|| dim>SIZE_MAX ) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
   if (numcls>0 && id3!=NULL && mode!=NULL) {
-    ct=(int *)calloc(numcls,sizeof(int));
+    ct=(int *)R_Calloc((size_t)numcls,int);
     for (i=0;i<numcls;i++) ct[i]=0;
-    newrefmode=(double **)calloc(numcls,sizeof(double *));
+    newrefmode=(double **)R_Calloc((size_t)numcls,double *);
     for (i=0;i<numcls;i++) {
-      newrefmode[i]=(double *)calloc(dim,sizeof(double));
+      newrefmode[i]=(double *)R_Calloc((size_t)dim,double);
       for (j=0;j<dim;j++) newrefmode[i][j]=0.0;
     }
-    newrefmode2=(double **)calloc(numcls,sizeof(double *));
+    newrefmode2=(double **)R_Calloc((size_t)numcls,double *);
     for (i=0;i<numcls;i++) {
-      newrefmode2[i]=(double *)calloc(dim,sizeof(double));
+      newrefmode2[i]=(double *)R_Calloc((size_t)dim,double);
       for (j=0;j<dim;j++) newrefmode2[i][j]=0.0;
     }
 
@@ -269,9 +289,9 @@ List augmentrefcls(int rncls, int rnseq, double **refmode, double *sigmadat,
 	for (j=0;j<dim;j++) newrefmode[i][j]=0.5*(newrefmode[i][j]+newrefmode2[i][j]);
     }
     
-    free(ct);
-    for (i=0;i<numcls;i++) free(newrefmode2[i]);
-    free(newrefmode2);
+    R_Free(ct);
+    for (i=0;i<numcls;i++) R_Free(newrefmode2[i]);
+    R_Free(newrefmode2);
 
   } else {//No new modes, only new paths
     numcls=0;
@@ -280,17 +300,25 @@ List augmentrefcls(int rncls, int rnseq, double **refmode, double *sigmadat,
   rncls2=rncls+numcls;
   rnseq2=rnseq+newnseq;
 
-  newrefpath=(int **)calloc(rnseq2,sizeof(int *));
+  if (rnseq2<0||rnseq2>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  newrefpath=(int **)R_Calloc((size_t)rnseq2,int *);
   for (i=0;i<rnseq;i++) newrefpath[i]=refpath[i];
   for (i=rnseq;i<rnseq+newnseq;i++) newrefpath[i]=newoptst[i-rnseq];
 
-  newrefcls=(int *)calloc(rnseq2,sizeof(int));
-  newrefcls2=(int *)calloc(rnseq2,sizeof(int)); //for use as sorted newrefcls[]
+  newrefcls=(int *)R_Calloc((size_t)rnseq2,int);
+  newrefcls2=(int *)R_Calloc((size_t)rnseq2,int); //for use as sorted newrefcls[]
   for (i=0;i<rnseq;i++) newrefcls[i]=refcls[i];
   for (i=rnseq;i<rnseq+newnseq;i++) newrefcls[i]=clsid2[i-rnseq];
 
   if (numcls>0) {
-    combmode=(double **)calloc(numcls+rncls,sizeof(double *));
+    if (numcls+rncls<0||numcls+rncls>SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+      
+    }
+    combmode=(double **)R_Calloc((size_t)numcls+rncls,double *);
     for (i=0;i<rncls;i++) combmode[i]=refmode[i];
     for (i=0;i<numcls;i++) combmode[rncls+i]=newrefmode[i];
   }
@@ -299,32 +327,36 @@ List augmentrefcls(int rncls, int rnseq, double **refmode, double *sigmadat,
   }
   
   int **bufoptst, *invid;
-  bufoptst=(int **)calloc(rnseq2,sizeof(int *));
-  invid=(int *)calloc(rnseq2,sizeof(int));
+  if (rnseq2<0||rnseq2>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  bufoptst=(int **)R_Calloc((size_t)rnseq2,int *);
+  invid=(int *)R_Calloc((size_t)rnseq2,int);
   
   SortLexigraphicInt(newrefpath, bufoptst,invid,nb,rnseq2);
   
   for (i=0;i<rnseq+newnseq;i++) newrefcls2[i]=newrefcls[invid[i]];
 
   //int *ct2;
-  //ct2=(int *)calloc(rncls2,sizeof(int));
+  //ct2=(int *)R_Calloc((size_t)rncls2,int);
   //for (i=0;i<rncls2;i++) ct2[i]=0;
   //for (i=0;i<nseq;i++) ct2[clsid[i]]++; //#occurrences for each cluster in this dataset
 
   //if (clsfile!=NULL)
     //printrefcls(clsfile, rncls2, rnseq2, combmode, sigmadat, bufoptst, newrefcls2, dim, nb, nseq,ct2);
 
-  //free(ct2);
+  //R_Free(ct2);
   List newClust = wrapClust(combmode, sigmadat, nb, dim, 
 				rncls2, rnseq2, bufoptst, newrefcls2);
   
-  free(newrefpath);
-  free(newrefcls);
-  free(newrefcls2);
-  free(bufoptst);
-  free(invid);
+  R_Free(newrefpath);
+  R_Free(newrefcls);
+  R_Free(newrefcls2);
+  R_Free(bufoptst);
+  R_Free(invid);
   //the memory of newrefmode[i] should NOT be released, taken by combmode
-  if (newrefmode!=NULL) free(newrefmode); 
+  if (newrefmode!=NULL) R_Free(newrefmode); 
   
   *combmode_pt=combmode;
   
@@ -339,7 +371,11 @@ int AdjustCluster(int *clsid, int nseq, int rncls, double **refmode, double **u,
   int *ct;
   double db1,db2;
 
-  ct=(int *)calloc(rncls,sizeof(int));
+  if (rncls<0||rncls>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  ct=(int *)R_Calloc((size_t)rncls,int);
   for (i=0;i<rncls;i++) ct[i]=0;
   for (i=0;i<nseq;i++) ct[clsid[i]]++;
   for (i=0,k=-1,m=0,n=0;i<rncls;i++) {
@@ -377,7 +413,7 @@ int AdjustCluster(int *clsid, int nseq, int rncls, double **refmode, double **u,
     }
   }
 
-  free(ct);
+  R_Free(ct);
   return 0;
 }
 
@@ -398,8 +434,11 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   //Rcout << "dim = " << dim << "\n";
 
   double **u; // 2d representation of the data. Each row - new datapoint
-
-  u = (double **)calloc(nseq,sizeof(double *));
+  
+  if (nseq<0||nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+  }
+  u = (double **)R_Calloc((size_t)nseq,double *);
 
   for (int i = 0; i < nseq; i++){
     u[i] = dataTranspose.begin() + i*dim;
@@ -417,7 +456,7 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   CondChain *md=NULL;
   
   if (!Rf_isNull(VbStructure)){
-	md=(CondChain *)calloc(1,sizeof(CondChain));
+	md=(CondChain *)R_Calloc(1,CondChain);
 	
 	parseVbStructure(VbStructure, md);
    
@@ -509,11 +548,19 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   ordervar(u,nseq,md->nb,md->bdim,md->var);
     
   double *loglikehd;
-  loglikehd=(double *)calloc(nseq,sizeof(double));
+
+  if (nseq<0||nseq>SIZE_MAX || md->nb<0 || md->nb>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+  }
+  loglikehd=(double *)R_Calloc((size_t)nseq,double);
     
   int **optst;
-  optst=(int **)calloc(nseq,sizeof(int *));
-  for (int i=0;i<nseq;i++) optst[i]=(int *)calloc(md->nb,sizeof(int));
+  optst=(int **)R_Calloc((size_t)nseq,int *);
+  if (md->nb < 0||md->nb > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  for (int i=0;i<nseq;i++) optst[i]=(int *)R_Calloc((size_t)md->nb,int);
   
   
   
@@ -532,13 +579,19 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   
   #pragma omp parallel
   {
-	double *meritbuf=(double *)calloc(md->maxnumst,sizeof(double));
+    if (md->maxnumst<0 || md->maxnumst >SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+    }
+    if (md->maxnumst <0||md->maxnumst >SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+    }
+    double *meritbuf=(double *)R_Calloc((size_t)md->maxnumst,double);
  
 	#pragma omp for
 	for (int i=0;i<nseq;i++)
 		viterbi(md,u[i],optst[i],NULL,meritbuf);
     
-    free(meritbuf);
+    R_Free(meritbuf);
   }
     
   NumericVector loglh(nseq);
@@ -570,7 +623,10 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   
   int *clsid, noref, *ct;
 
-  clsid=(int *)calloc(nseq,sizeof(int));
+  if (nseq<0||nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n"); 
+  }
+  clsid=(int *)R_Calloc((size_t)nseq,int);
   for (int i=0;i<nseq;i++) clsid[i]=-1;
   if (!Rf_isNull(rfsClust_)) {
     noref=0;
@@ -593,13 +649,13 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
     if (mincls>1) {
       if (AdjustCluster(clsid, nseq,rncls,refmode,u, dim, mincls) < 0){
 		// free memory
-		for (int i=0;i<nseq;i++) free(optst[i]);
-		free(optst);
+		for (int i=0;i<nseq;i++) R_Free(optst[i]);
+		R_Free(optst);
 
-		free(clsid);
+		R_Free(clsid);
 		freeccm(&md);
-		free(md);
-		free(u);
+		R_Free(md);
+		R_Free(u);
 
 		if (!Rf_isNull(rfsClust_))
 			freeClust(refmode, refsigma,
@@ -607,8 +663,11 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
 		return S4();
 	  }
     }
-    
-    ct=(int *)calloc(rncls,sizeof(int));
+
+    if (rncls<0||rncls > SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    }
+    ct=(int *)R_Calloc((size_t)rncls,int);
 	for (int i=0;i<rncls;i++) ct[i]=0;
     for (int i=0;i<nseq;i++) ct[clsid[i]]++;
 	
@@ -624,14 +683,14 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
     if(get_likeld==1){HmmVbClust.slot("Loglikehd") = loglh;}
 	
 	// free memory
-	for (int i=0;i<nseq;i++) free(optst[i]);
-	free(optst);
+	for (int i=0;i<nseq;i++) R_Free(optst[i]);
+	R_Free(optst);
 	
-	free(ct);
-	free(clsid);
+	R_Free(ct);
+	R_Free(clsid);
 	freeccm(&md);
-	free(md);
-	free(u);
+	R_Free(md);
+	R_Free(u);
 	
 	if (!Rf_isNull(rfsClust_))
 		freeClust(refmode, refsigma,
@@ -645,11 +704,17 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   //---------------------------------------------------------//
 
   int **optst2, **newoptst, newnseq, *newid, *id2;
-  
-  id2=(int *)calloc(nseq,sizeof(int));
 
-  if (noref<nseq) {
-    optst2=(int **)calloc(noref,sizeof(int *));
+  if (nseq<0||nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  id2=(int *)R_Calloc((size_t)nseq,int);
+
+  if (noref<nseq) {            
+    if (noref<0||noref > SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    }
+    optst2=(int **)R_Calloc((size_t)noref,int *);
     for (int i=0, k=0;i<nseq;i++){
       if (clsid[i]<0){//path doesn't exist in reference
 	optst2[k]=optst[i];
@@ -663,26 +728,33 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
     for (int i=0;i<nseq;i++) id2[i]=i;
   }
 
-  newid=(int *)calloc(noref,sizeof(int));
+  
+  if (noref<0||noref > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  newid=(int *)R_Calloc((size_t)noref,int);
   
   FindDifSeq(optst2, noref, md->nb, &newoptst, &newnseq, newid);
 
   if (optst2 != optst){
 	for (int i=0; i<nseq; i++)
-		free(optst[i]);
-	free(optst);
+		R_Free(optst[i]);
+	R_Free(optst);
   }
 
   for (int i=0; i<noref; i++)
-	free(optst2[i]);
-  free(optst2);
+	R_Free(optst2[i]);
+  R_Free(optst2);
   
   //fprintf(stderr, "After FindDifSeq, noref=%d, newnseq=%d\n",noref,newnseq);
   //=============================//
   // Compute modes               //
   //=============================//
   CompMode *cpm;
-  cpm=(CompMode *)calloc(newnseq,sizeof(CompMode));
+  if (newnseq<0||newnseq > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  cpm=(CompMode *)R_Calloc((size_t)newnseq,CompMode);
   
   for (int i=0;i<newnseq;i++) {
     SetCompMode(cpm+i,newoptst[i], md);
@@ -691,7 +763,10 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
 
   int numcls=0;
   double *sigmadat;
-  sigmadat=(double *)calloc(dim,sizeof(double));
+  if (dim<0||dim > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  sigmadat=(double *)R_Calloc((size_t)dim,double);
 
   //sigmadat here is the within component standard deviation
   //if (refexist){
@@ -708,7 +783,10 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   int norefmode, *clsid2;
   double **combmode;
 
-  clsid2=(int *)calloc(newnseq,sizeof(int));
+  if (newnseq<0||newnseq > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  clsid2=(int *)R_Calloc((size_t)newnseq,int);
   norefmode=0;
   for (int i=0;i<newnseq;i++){//See whether new modes coincide with existing modes
     clsid2[i]=FindCluster(cpm[i].mode, dim, rncls, refmode, sigmadat, modethreshold, usemeandist);
@@ -735,26 +813,29 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
       if (AdjustCluster(clsid, nseq,rncls,refmode,u, dim, mincls) < 0){
 		// free memory
 		for (int i=0; i<newnseq; i++) freeCompMode(cpm+i);
-		free(cpm);
-		free(clsid);
-		free(clsid2);
-		free(sigmadat);
+		R_Free(cpm);
+		R_Free(clsid);
+		R_Free(clsid2);
+		R_Free(sigmadat);
 
 		freeccm(&md);
-		free(md);
-		free(u);
+		R_Free(md);
+		R_Free(u);
 
 		if (!Rf_isNull(rfsClust_))
 			freeClust(refmode, refsigma,
 					   rncls, rnseq, refpath, refcls);
 
-		free(combmode);
+		R_Free(combmode);
 		
 		return S4();
 	  }
     }
-    
-    ct=(int *)calloc(rncls,sizeof(int));
+
+    if (rncls<0||rncls > SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    }
+    ct=(int *)R_Calloc((size_t)rncls,int);
 	for (int i=0;i<rncls;i++) ct[i]=0;
     for (int i=0;i<nseq;i++) ct[clsid[i]]++;
 	
@@ -767,21 +848,21 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
 	
 	// free memory
 	for (int i=0; i<newnseq; i++) freeCompMode(cpm+i);
-	free(cpm);
-	free(ct);
-	free(clsid);
-	free(clsid2);
-	free(sigmadat);
+	R_Free(cpm);
+	R_Free(ct);
+	R_Free(clsid);
+	R_Free(clsid2);
+	R_Free(sigmadat);
 	
 	freeccm(&md);
-	free(md);
-	free(u);
+	R_Free(md);
+	R_Free(u);
 	
 	if (!Rf_isNull(rfsClust_))
 		freeClust(refmode, refsigma,
 				   rncls, rnseq, refpath, refcls);
 	
-	free(combmode);
+	R_Free(combmode);
   
 	
     return HmmVbClust;
@@ -792,10 +873,13 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   //--------------------------------------------------------------------//
   int *id3, *cls;
   double **mode;
-  
-  id3=(int *)calloc(newnseq,sizeof(int));
-  cls=(int *)calloc(norefmode,sizeof(int));
-  mode=(double **)calloc(norefmode,sizeof(double *));
+
+  if (norefmode<0||norefmode > SIZE_MAX || newnseq <0||newnseq > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  id3=(int *)R_Calloc((size_t)newnseq,int);
+  cls=(int *)R_Calloc((size_t)norefmode,int);
+  mode=(double **)R_Calloc((size_t)norefmode,double *);
   for (int i=0, k=0;i<newnseq;i++) {
     if (clsid2[i]<0) {
       mode[k]=cpm[i].mode;
@@ -832,36 +916,39 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   if (mincls>1) {
     if (AdjustCluster(clsid, nseq,rncls+numcls,combmode,u, dim, mincls) < 0){
 		// free memory
-		for (int i=0; i<newnseq; i++) free(newoptst[i]);
-		free(newoptst);
+		for (int i=0; i<newnseq; i++) R_Free(newoptst[i]);
+		R_Free(newoptst);
 
-		free(id2);
-		free(newid);
-		free(clsid);
-		free(clsid2);
-		free(id3);
-		free(cls);
-		free(sigmadat);
+		R_Free(id2);
+		R_Free(newid);
+		R_Free(clsid);
+		R_Free(clsid2);
+		R_Free(id3);
+		R_Free(cls);
+		R_Free(sigmadat);
 
-		free(mode);
+		R_Free(mode);
 		for (int i=0; i<newnseq; i++) freeCompMode(cpm+i);
-		free(cpm);
+		R_Free(cpm);
 
 		freeccm(&md);
-		free(md);  
-		free(u);
+		R_Free(md);  
+		R_Free(u);
 
 		if (!Rf_isNull(rfsClust_))
 			freeClust(refmode, refsigma,
 					   rncls, rnseq, refpath, refcls);
 
-		for (int i = rncls; i < rncls+numcls; i++) free(combmode[i]);
-		free(combmode);
+		for (int i = rncls; i < rncls+numcls; i++) R_Free(combmode[i]);
+		R_Free(combmode);
 		return S4();
 	}
   }
-  
-  ct=(int *)calloc(rncls+numcls,sizeof(int));
+
+  if (rncls+numcls<0||rncls+numcls>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  ct=(int *)R_Calloc((size_t)rncls+numcls,int);
   for (int i=0;i<rncls+numcls;i++) ct[i]=0;
   for (int i=0;i<nseq;i++) ct[clsid[i]]++;
 
@@ -873,32 +960,32 @@ S4 rcpp_clust(NumericMatrix dataTranspose, S4 HmmVb, Nullable<List> rfsClust_, L
   if(get_likeld==1){HmmVbClust.slot("Loglikehd") = loglh;}
 
   // free memory
-  for (int i=0; i<newnseq; i++) free(newoptst[i]);
-  free(newoptst);
+  for (int i=0; i<newnseq; i++) R_Free(newoptst[i]);
+  R_Free(newoptst);
   
-  free(id2);
-  free(newid);
-  free(clsid);
-  free(clsid2);
-  free(ct);
-  free(id3);
-  free(cls);
-  free(sigmadat);
+  R_Free(id2);
+  R_Free(newid);
+  R_Free(clsid);
+  R_Free(clsid2);
+  R_Free(ct);
+  R_Free(id3);
+  R_Free(cls);
+  R_Free(sigmadat);
   
-  free(mode);
+  R_Free(mode);
   for (int i=0; i<newnseq; i++) freeCompMode(cpm+i);
-  free(cpm);
+  R_Free(cpm);
 
   freeccm(&md);
-  free(md);  
-  free(u);
+  R_Free(md);  
+  R_Free(u);
   
   if (!Rf_isNull(rfsClust_))
 		freeClust(refmode, refsigma,
 				   rncls, rnseq, refpath, refcls);
 	
-  for (int i = rncls; i < rncls+numcls; i++) free(combmode[i]);
-  free(combmode);
+  for (int i = rncls; i < rncls+numcls; i++) R_Free(combmode[i]);
+  R_Free(combmode);
   
   return HmmVbClust;
 }

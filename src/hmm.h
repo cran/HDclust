@@ -29,6 +29,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef R_NO_REMAP
+#define R_NO_REMAP  // Prevent R from remapping common names
+#endif
+#include <Rinternals.h>
+#include <limits.h>
+
 #include "matrix.h"
 #include "cluster.h"
 #define EPSILON 1.0e-5

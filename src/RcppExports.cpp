@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // rcpp_findModes
 S4 rcpp_findModes(NumericMatrix dataTranspose, S4 HmmVb, IntegerVector nthread);
 RcppExport SEXP _HDclust_rcpp_findModes(SEXP dataTransposeSEXP, SEXP HmmVbSEXP, SEXP nthreadSEXP) {

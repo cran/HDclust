@@ -4,7 +4,9 @@
 \name{sim3}
 \alias{sim3}
 \title{Synthetic dataset used in section 5.1.3 of the reference paper}
-\format{A data frame with 1000 rows and 40 variables. Last column contains ground truth cluster labels.}
+\format{
+A data frame with 1000 rows and 40 variables. Last column contains ground truth cluster labels.
+}
 \usage{
 sim3
 }

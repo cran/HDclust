@@ -30,6 +30,12 @@
 #include "matrix.h"
 #include <Rcpp.h>
 
+#ifndef R_NO_REMAP
+#define R_NO_REMAP  // Prevent R from remapping common names
+#endif
+#include <Rinternals.h>
+#include <limits.h>
+
 
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
@@ -41,7 +47,7 @@ unsigned char vector_uchar(unsigned char **mt, int dim)
 {
   unsigned char *tp;
 
-  tp = (unsigned char *)calloc(dim, sizeof(unsigned char));
+  tp = (unsigned char *)R_Calloc((size_t)dim, unsigned char);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in vector_uchar\n";
     return(0);
@@ -55,7 +61,7 @@ unsigned char vector_float(float **mt, int dim)
 {
   float *tp;
 
-  tp = (float *)calloc(dim, sizeof(float));
+  tp = (float *)R_Calloc((size_t)dim, float);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in vector_float\n";
     return(0);
@@ -69,7 +75,7 @@ unsigned char vector_double(double **mt, int dim)
 {
   double *tp;
 
-  tp = (double *)calloc(dim, sizeof(double));
+  tp = (double *)R_Calloc((size_t)dim, double);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in vector_double\n";
     return(0);
@@ -83,7 +89,7 @@ unsigned char vector_int(int **mt, int dim)
 {
   int *tp;
 
-  tp = (int *)calloc(dim, sizeof(int));
+  tp = (int *)R_Calloc((size_t)dim, int);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in vector_int\n";
     return(0);
@@ -105,7 +111,7 @@ unsigned char matrix_2d_uchar(unsigned char ***mt, int rows, int cols)
   unsigned char **tp;
   int i;
 
-  tp = (unsigned char **)calloc(rows, sizeof(unsigned char *));
+  tp = (unsigned char **)R_Calloc((size_t)rows, unsigned char *);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_2d_uchar\n";
     return(0);
@@ -117,7 +123,7 @@ unsigned char matrix_2d_uchar(unsigned char ***mt, int rows, int cols)
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (unsigned char *)calloc(cols, sizeof(unsigned char));
+    tp[i] = (unsigned char *)R_Calloc((size_t)cols, unsigned char);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_2d_uchar\n";
       return(0);
@@ -133,7 +139,7 @@ unsigned char matrix_2d_float(float ***mt, int rows, int cols)
   float **tp;
   int i;
 
-  tp = (float **)calloc(rows, sizeof(float *));
+  tp = (float **)R_Calloc((size_t)rows, float *);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_2d_float\n";
     return(0);
@@ -145,7 +151,7 @@ unsigned char matrix_2d_float(float ***mt, int rows, int cols)
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (float *)calloc(cols, sizeof(float));
+    tp[i] = (float *)R_Calloc((size_t)cols, float);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_2d_float\n";
       return(0);
@@ -161,7 +167,7 @@ unsigned char matrix_2d_double(double ***mt, int rows, int cols)
   double **tp;
   int i;
 
-  tp = (double **)calloc(rows, sizeof(double *));
+  tp = (double **)R_Calloc((size_t)rows, double *);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_2d_double\n";
     return(0);
@@ -173,7 +179,7 @@ unsigned char matrix_2d_double(double ***mt, int rows, int cols)
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (double *)calloc(cols, sizeof(double));
+    tp[i] = (double *)R_Calloc((size_t)cols, double);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_2d_double\n";
       return(0);
@@ -189,7 +195,7 @@ unsigned char matrix_2d_int(int ***mt, int rows, int cols)
   int **tp;
   int i;
 
-  tp = (int **)calloc(rows, sizeof(int *));
+  tp = (int **)R_Calloc((size_t)rows, int *);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_2d_int\n";
     return(0);
@@ -201,7 +207,7 @@ unsigned char matrix_2d_int(int ***mt, int rows, int cols)
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (int *)calloc(cols, sizeof(int));
+    tp[i] = (int *)R_Calloc((size_t)cols, int);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_2d_int\n";
       return(0);
@@ -224,7 +230,7 @@ unsigned char matrix_3d_uchar(unsigned char ****mt, int rows,
   unsigned char ***tp;
   int i, j;
 
-  tp = (unsigned char ***)calloc(rows, sizeof(unsigned char **));
+  tp = (unsigned char ***)R_Calloc((size_t)rows, unsigned char **);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_3d_uchar\n";
     return(0);
@@ -236,14 +242,14 @@ unsigned char matrix_3d_uchar(unsigned char ****mt, int rows,
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (unsigned char **)calloc(cols, sizeof(unsigned char *));
+    tp[i] = (unsigned char **)R_Calloc((size_t)cols, unsigned char *);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_3d_uchar\n";
       return(0);
     }
     if (depth==0) continue;
     for (j=0; j<cols; j++) {
-      tp[i][j] = (unsigned char *)calloc(depth, sizeof(unsigned char));
+      tp[i][j] = (unsigned char *)R_Calloc((size_t)depth, unsigned char);
       if (tp[i][j]==NULL) {
 	Rcpp::Rcout << "Can't allocate space in matrix_3d_uchar\n";
 	return(0);
@@ -261,7 +267,7 @@ unsigned char matrix_3d_float(float ****mt, int rows,
   float ***tp;
   int i, j;
 
-  tp = (float ***)calloc(rows, sizeof(float **));
+  tp = (float ***)R_Calloc((size_t)rows, float **);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_3d_float\n";
     return(0);
@@ -273,14 +279,14 @@ unsigned char matrix_3d_float(float ****mt, int rows,
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (float **)calloc(cols, sizeof(float *));
+    tp[i] = (float **)R_Calloc((size_t)cols, float *);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_3d_float\n";
       return(0);
     }
     if (depth==0) continue;
     for (j=0; j<cols; j++) {
-      tp[i][j] = (float *)calloc(depth, sizeof(float));
+      tp[i][j] = (float *)R_Calloc((size_t)depth, float);
       if (tp[i][j]==NULL) {
 	Rcpp::Rcout << "Can't allocate space in matrix_3d_float\n";
 	return(0);
@@ -299,7 +305,7 @@ unsigned char matrix_3d_double(double ****mt, int rows,
   double ***tp;
   int i, j;
 
-  tp = (double ***)calloc(rows, sizeof(double **));
+  tp = (double ***)R_Calloc((size_t)rows, double **);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_3d_double\n";
     return(0);
@@ -311,14 +317,14 @@ unsigned char matrix_3d_double(double ****mt, int rows,
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (double **)calloc(cols, sizeof(double *));
+    tp[i] = (double **)R_Calloc((size_t)cols, double *);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_3d_double\n";
       return(0);
     }
     if (depth==0) continue;
     for (j=0; j<cols; j++) {
-      tp[i][j] = (double *)calloc(depth, sizeof(double));
+      tp[i][j] = (double *)R_Calloc((size_t)depth, double);
       if (tp[i][j]==NULL) {
 	Rcpp::Rcout << "Can't allocate space in matrix_3d_double\n";
 	return(0);
@@ -336,7 +342,7 @@ unsigned char matrix_3d_int(int ****mt, int rows,
   int ***tp;
   int i, j;
 
-  tp = (int ***)calloc(rows, sizeof(int **));
+  tp = (int ***)R_Calloc((size_t)rows, int **);
   if (tp==NULL) {
     Rcpp::Rcout << "Can't allocate space in matrix_3d_int\n";
     return(0);
@@ -348,14 +354,14 @@ unsigned char matrix_3d_int(int ****mt, int rows,
   }
 
   for (i=0; i<rows; i++) {
-    tp[i] = (int **)calloc(cols, sizeof(int *));
+    tp[i] = (int **)R_Calloc((size_t)cols, int *);
     if (tp[i]==NULL) {
       Rcpp::Rcout << "Can't allocate space in matrix_3d_int\n";
       return(0);
     }
     if (depth==0) continue;
     for (j=0; j<cols; j++) {
-      tp[i][j] = (int *)calloc(depth, sizeof(int));
+      tp[i][j] = (int *)R_Calloc((size_t)depth, int);
       if (tp[i][j]==NULL) {
 	Rcpp::Rcout << "Can't allocate space in matrix_3d_int\n";
 	return(0);
@@ -381,9 +387,9 @@ void free_matrix_2d_uchar(unsigned char ***mt, int rows)
 
   tp = *mt;
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
   
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -395,9 +401,9 @@ void free_matrix_2d_float(float ***mt, int rows)
 
   tp = *mt;
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
   
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -409,9 +415,9 @@ void free_matrix_2d_double(double ***mt, int rows)
 
   tp = *mt;
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
   
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -423,9 +429,9 @@ void free_matrix_2d_int(int ***mt, int rows)
 
   tp = *mt;
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
   
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -444,11 +450,11 @@ void free_matrix_3d_uchar(unsigned char ****mt, int rows, int cols)
   tp = *mt;
   for (i=0; i<rows; i++)
     for (j=0; j<cols; j++)
-      free(tp[i][j]);
+      R_Free(tp[i][j]);
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
 
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -461,11 +467,11 @@ void free_matrix_3d_float(float ****mt, int rows, int cols)
   tp = *mt;
   for (i=0; i<rows; i++)
     for (j=0; j<cols; j++)
-      free(tp[i][j]);
+      R_Free(tp[i][j]);
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
 
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -478,11 +484,11 @@ void free_matrix_3d_double(double ****mt, int rows, int cols)
   tp = *mt;
   for (i=0; i<rows; i++)
     for (j=0; j<cols; j++)
-      free(tp[i][j]);
+      R_Free(tp[i][j]);
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
 
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -495,11 +501,11 @@ void free_matrix_3d_int(int ****mt, int rows, int cols)
   tp = *mt;
   for (i=0; i<rows; i++)
     for (j=0; j<cols; j++)
-      free(tp[i][j]);
+      R_Free(tp[i][j]);
   for (i=0; i<rows; i++)
-    free(tp[i]);
+    R_Free(tp[i]);
 
-  free(tp);
+  R_Free(tp);
   
   *mt = NULL;
 }
@@ -913,7 +919,7 @@ unsigned char ludcmp_float(float **a, int n, int *indx, float *d)
 	big = temp;
     if (big==0.0) {
       Rcpp::Rcout << "Singular matrix in ludcmp_float\n";
-      free(vv);
+      R_Free(vv);
       return(2); /* 2 stands for singular matrix */
     }
     vv[i]=1.0/big;
@@ -955,7 +961,7 @@ unsigned char ludcmp_float(float **a, int n, int *indx, float *d)
     }
   }
 
-  free(vv);
+  R_Free(vv);
   return(1);
 }
 
@@ -978,7 +984,7 @@ unsigned char ludcmp_double(double **a, int n, int *indx, double *d)
 	big = temp;
     if (big==0.0) {
       Rcpp::Rcout << "Singular matrix in ludcmp_double" << std::endl;
-      free(vv);
+      R_Free(vv);
       return(2); /* 2 stands for singular matrix */
     }
     vv[i]=1.0/big;
@@ -1020,7 +1026,7 @@ unsigned char ludcmp_double(double **a, int n, int *indx, double *d)
     }
   }
 
-  free(vv);
+  R_Free(vv);
   return(1);
 }
 
@@ -1102,8 +1108,8 @@ unsigned char mat_inv_float(float **mt, float **y, int dim)
       y[i][j]=col[i];
   }
 
-  free(col);
-  free(indx);
+  R_Free(col);
+  R_Free(indx);
   free_matrix_2d_float(&a, dim);
   return(1);
 }
@@ -1142,8 +1148,8 @@ unsigned char mat_inv_double(double **mt, double **y, int dim)
       y[i][j]=col[i];
   }
 
-  free(col);
-  free(indx);
+  R_Free(col);
+  R_Free(indx);
   free_matrix_2d_double(&a, dim);
   return(1);
 }
@@ -1185,7 +1191,7 @@ float mat_det_ludcmp_float(float **mt, int dim)
   ludcmp_float(a,dim,indx,&d);
   for (j=0; j<dim; j++) d *= a[j][j];
 
-  free(indx);
+  R_Free(indx);
   free_matrix_2d_float(&a, dim);
   return(d);
 }
@@ -1228,7 +1234,7 @@ double mat_det_ludcmp_double(double **mt, int dim)
 
   for (j=0; j<dim; j++) d *= a[j][j];
 
-  free(indx);
+  R_Free(indx);
   free_matrix_2d_double(&a, dim);
   return(d);
 }
@@ -1271,8 +1277,8 @@ unsigned char mat_det_inv_double(double **mt, double **y, double *det,
   if (m==2) {  /** singular matrix **/
     Rcpp::Rcout << "Singular matrix in mat_det_inv_double" << std::endl;
     *det=0.0;
-    free(col);
-    free(indx);
+    R_Free(col);
+    R_Free(indx);
     free_matrix_2d_double(&a, dim);
     return(2);
   }
@@ -1288,8 +1294,8 @@ unsigned char mat_det_inv_double(double **mt, double **y, double *det,
       y[i][j]=col[i];
   }
 
-  free(col);
-  free(indx);
+  R_Free(col);
+  R_Free(indx);
   free_matrix_2d_double(&a, dim);
   return(1);
 }
@@ -1347,8 +1353,8 @@ unsigned char mat_det_inv_float(float **mt, float **y, float *det,
   m=ludcmp_float(a,dim,indx,&d);
   if (m==2) {  /** singular matrix **/
     *det=0.0;
-    free(col);
-    free(indx);
+    R_Free(col);
+    R_Free(indx);
     free_matrix_2d_float(&a, dim);
     return(2);
   }
@@ -1364,8 +1370,8 @@ unsigned char mat_det_inv_float(float **mt, float **y, float *det,
       y[i][j]=col[i];
   }
 
-  free(col);
-  free(indx);
+  R_Free(col);
+  R_Free(indx);
   free_matrix_2d_float(&a, dim);
   return(1);
 }

@@ -49,7 +49,7 @@
 #' # and several threads
 #' data("sim2")
 #' set.seed(12345)
-#' hmmvb <- hmmvbTrain(sim2[1:5], searchControl=vbSearchControl(nperm=10), nthread=3)
+#' hmmvb <- hmmvbTrain(sim2[1:5], searchControl=vbSearchControl(nperm=10), nthread=1)
 #' show(hmmvb)}
 #' @export 
 hmmvbTrain <- function(data, VbStructure=NULL,

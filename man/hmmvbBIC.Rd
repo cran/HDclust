@@ -4,8 +4,14 @@
 \alias{hmmvbBIC}
 \title{BIC for HMM-VB}
 \usage{
-hmmvbBIC(data, VbStructure, configList = NULL, numst = 1:10,
-  trControl = trainControl(), nthread = 1)
+hmmvbBIC(
+  data,
+  VbStructure,
+  configList = NULL,
+  numst = 1:10,
+  trControl = trainControl(),
+  nthread = 1
+)
 }
 \arguments{
 \item{data}{A numeric vector, matrix, or data frame of observations.
@@ -45,7 +51,7 @@ different configurations of states for the variable blocks.
 data("sim3")
 Vb <- vb(2, dim=40, bdim=c(10,30), numst=c(1,1), varorder=list(c(1:10),c(11:40)))
 set.seed(12345)
-hmmvbBIC(sim3[1:40], VbStructure)
+hmmvbBIC(sim3[1:40], VbStructure=Vb)
 
 # Search for the optimal number of states for HMM-VB model using 
 # provided values for the number of states 

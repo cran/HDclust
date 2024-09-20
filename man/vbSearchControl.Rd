@@ -4,8 +4,15 @@
 \alias{vbSearchControl}
 \title{Parameters for variable block structure search.}
 \usage{
-vbSearchControl(perm = NULL, numstPerDim = NULL, dim = NULL,
-  maxDim = 10, minDim = 1, nperm = 1, relax = FALSE)
+vbSearchControl(
+  perm = NULL,
+  numstPerDim = NULL,
+  dim = NULL,
+  maxDim = 10,
+  minDim = 1,
+  nperm = 1,
+  relax = FALSE
+)
 }
 \arguments{
 \item{perm}{A list of integer vectors specifying variable permutations. If

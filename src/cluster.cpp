@@ -26,7 +26,13 @@
 
 #include "cluster.h"
 #include <Rcpp.h>
+using namespace Rcpp;
 
+#ifndef R_NO_REMAP
+#define R_NO_REMAP  // Prevent R from remapping common names
+#endif
+#include <Rinternals.h>
+#include <limits.h>
 
 
 void split(double *cdwd, double *newcdwd, int dim, double *stddev)
@@ -56,8 +62,15 @@ void centroid(double *cdbk, int dim, int numcdwd, double *vc,
 {
   int i,j,k;
   int *ct;
-
-  ct=(int *)malloc(numcdwd*sizeof(int)); // number of points in clusters
+  size_t numcdwd_sz;
+  
+  numcdwd_sz=(size_t)numcdwd;
+  if (numcdwd < 0 || numcdwd > SIZE_MAX) {
+    // Handle error: integer value is out of range for size_t
+    Rcpp::stop("Memory allocation in centroid() exceeds allowed range: %d <0 or %d > %d\n", numcdwd, numcdwd, SIZE_MAX);
+    
+  }
+  ct=R_Calloc(numcdwd_sz, int); // number of points in clusters
 
   if (index==NULL)
     {
@@ -88,7 +101,7 @@ void centroid(double *cdbk, int dim, int numcdwd, double *vc,
 	  cdbk[j*dim+k] /= ((double)ct[j]);
     }
 
-  free(ct);
+  R_Free(ct);
 
 }  
 
@@ -98,7 +111,7 @@ void cellstdv(double *cdbk, double *stddev, int dim, int numcdwd, double *vc,
   int i,j,k;
   int *ct;
 
-  ct=(int *)malloc(numcdwd*sizeof(int));
+  ct=(int *)R_Calloc((size_t)numcdwd,int);
 
   for (j=0; j<numcdwd; j++) {
     for (k=0; k<dim; k++)
@@ -125,7 +138,7 @@ void cellstdv(double *cdbk, double *stddev, int dim, int numcdwd, double *vc,
     }
   }
 
-  free(ct);
+  R_Free(ct);
 
 }  
 
@@ -147,9 +160,16 @@ void encode(double *cdbk, int dim, int numcdwd, double *vc, int *code,
 {
   int i,j;
   double *dist,minv;
+  size_t numcdwd_sz;
 
-  dist=(double *)calloc(numcdwd,sizeof(double));
-
+  numcdwd_sz=(size_t)numcdwd;
+  if (numcdwd < 0 || numcdwd > SIZE_MAX) {
+    // Handle error: integer value is out of range for size_t
+    Rcpp::stop("Memory allocation in centroid() exceeds allowed range: %d <0 or %d > %d\n", numcdwd, numcdwd, SIZE_MAX);
+    
+  }
+  dist=R_Calloc(numcdwd_sz, double);
+  
   for (i=0; i<numdata; i++) {
     for (j=0; j<numcdwd;j++)
       dist[j]=mse_dist(cdbk+j*dim, vc+i*dim, dim);    
@@ -162,7 +182,7 @@ void encode(double *cdbk, int dim, int numcdwd, double *vc, int *code,
       }
   }
 
-  free(dist);
+  R_Free(dist);
 }
 
 
@@ -199,8 +219,12 @@ double lloyd(double *cdbk, int dim, int numcdwd, double *vc, int numdata,
   }  
 
 
-  index = (int *)calloc(numdata, sizeof(int));
-  stddev = (double *)calloc(numcdwd*dim,sizeof(double));
+  if (numdata<0 || numdata>SIZE_MAX || numcdwd*dim<0 || numcdwd*dim > SIZE_MAX){
+    Rcpp::stop("Error in memory allocation, negative or too big.\n");
+    
+  }
+  index = R_Calloc((size_t)numdata, int);
+  stddev = R_Calloc((size_t)numcdwd*dim,double);
 
   centroid(cdbk, dim, 1, vc, NULL, numdata); // centroid coordinate for single cluster
 
@@ -265,8 +289,8 @@ double lloyd(double *cdbk, int dim, int numcdwd, double *vc, int numdata,
 
   }
 
-  free(index);
-  free(stddev);
+  R_Free(index);
+  R_Free(stddev);
 
   return(dist);
 

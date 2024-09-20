@@ -36,7 +36,7 @@ int newgauss(GaussModel *md, int dim, int exist)
   md->dim=dim;
   md->exist=exist;
 
-  md->mean=(double *)calloc(dim,sizeof(double));
+  md->mean=(double *)R_Calloc((size_t)dim,double);
   matrix_2d_double(&(md->sigma),dim,dim);
   matrix_2d_double(&(md->sigma_inv), dim, dim);
 
@@ -73,13 +73,13 @@ void newgmm(GmmModel *md, int dim, int numst)
   md->dim=dim;
   md->numst=numst;
 
-  md->stpdf=(GaussModel **)calloc(numst, sizeof(GaussModel *));
+  md->stpdf=(GaussModel **)R_Calloc((size_t)numst, GaussModel *);
   for (i=0; i<numst; i++) {
-    md->stpdf[i]=(GaussModel *)calloc(1,sizeof(GaussModel));
+    md->stpdf[i]=(GaussModel *)R_Calloc(1,GaussModel);
     newgauss(md->stpdf[i], dim, exist);
   }
   
-  md->p=(double *)calloc(numst, sizeof(double));
+  md->p=(double *)R_Calloc((size_t)numst, double);
 }
 
 
@@ -93,16 +93,16 @@ void freegmm(GmmModel **md_pt)
   numst=md->numst;
 
   for (i=0; i<numst; i++) {
-    free(md->stpdf[i]->mean);
+    R_Free(md->stpdf[i]->mean);
     free_matrix_2d_double(&(md->stpdf[i]->sigma), md->dim);
     free_matrix_2d_double(&(md->stpdf[i]->sigma_inv), md->dim);
-    free(md->stpdf[i]);
+    R_Free(md->stpdf[i]);
   }
-  free(md->stpdf);
+  R_Free(md->stpdf);
 
-  free(md->p);
+  R_Free(md->p);
 
-  free(md);
+  R_Free(md);
   *md_pt=NULL;
 }
 
@@ -130,14 +130,14 @@ void newhmm(HmmModel *md, int dim, int numst, int prenumst)
   md->numst=numst;
   md->prenumst=prenumst;
 
-  md->stpdf=(GaussModel **)calloc(numst, sizeof(GaussModel *));
+  md->stpdf=(GaussModel **)R_Calloc((size_t)numst, GaussModel *);
   for (i=0; i<numst; i++) {
-    md->stpdf[i]=(GaussModel *)calloc(1,sizeof(GaussModel));
+    md->stpdf[i]=(GaussModel *)R_Calloc(1,GaussModel);
     newgauss(md->stpdf[i], dim, exist);
   }
   
   matrix_2d_double(&(md->a), prenumst,numst);
-  md->a00=(double *)calloc(numst, sizeof(double));
+  md->a00=(double *)R_Calloc((size_t)numst, double);
 }
 
 
@@ -152,17 +152,17 @@ void freehmm(HmmModel **md_pt)
   prenumst=md->prenumst;
 
   for (i=0; i<numst; i++) {
-    free(md->stpdf[i]->mean);
+    R_Free(md->stpdf[i]->mean);
     free_matrix_2d_double(&(md->stpdf[i]->sigma), md->dim);
     free_matrix_2d_double(&(md->stpdf[i]->sigma_inv), md->dim);
-    free(md->stpdf[i]);
+    R_Free(md->stpdf[i]);
   }
-  free(md->stpdf);
+  R_Free(md->stpdf);
 
-  free(md->a00);
+  R_Free(md->a00);
   free_matrix_2d_double(&md->a, prenumst);
 
-  free(md);
+  R_Free(md);
   *md_pt=NULL;
 }
 
@@ -174,16 +174,16 @@ void newccm(CondChain *md, int nb, int *bdim, int **var, int *numst)
   for (i=0,m=0;i<nb;i++) m+=bdim[i];
   md->nb=nb; md->dim=m;
 
-  md->bdim=(int *)calloc(nb,sizeof(int));
-  md->cbdim=(int *)calloc(nb,sizeof(int));
-  md->numst=(int *)calloc(nb,sizeof(int));
-  md->cnumst=(int *)calloc(nb,sizeof(int));
-  md->var=(int **)calloc(nb,sizeof(int *));
+  md->bdim=(int *)R_Calloc((size_t)nb,int);
+  md->cbdim=(int *)R_Calloc((size_t)nb,int);
+  md->numst=(int *)R_Calloc((size_t)nb,int);
+  md->cnumst=(int *)R_Calloc((size_t)nb,int);
+  md->var=(int **)R_Calloc((size_t)nb,int *);
   for (i=0;i<nb;i++)
-    md->var[i]=(int *)calloc(bdim[i],sizeof(int));
-  md->mds=(HmmModel **)calloc(nb,sizeof(HmmModel *));
+    md->var[i]=(int *)R_Calloc((size_t)bdim[i],int);
+  md->mds=(HmmModel **)R_Calloc((size_t)nb,HmmModel *);
   for (i=0;i<nb;i++) 
-    md->mds[i]=(HmmModel *)calloc(1,sizeof(HmmModel));
+    md->mds[i]=(HmmModel *)R_Calloc(1,HmmModel);
 
   md->cbdim[0]=md->cnumst[0]=0;
   for (i=0,md->maxnumst=0;i<nb;i++) {
@@ -211,15 +211,15 @@ void freeccm(CondChain **md_pt)
   md=*md_pt;
   nb=md->nb;
 
-  free(md->bdim); free(md->cbdim); 
-  free(md->numst); free(md->cnumst);
+  R_Free(md->bdim); R_Free(md->cbdim); 
+  R_Free(md->numst); R_Free(md->cnumst);
   for (i=0;i<nb;i++)
-    free(md->var[i]);
-  free(md->var);
+    R_Free(md->var[i]);
+  R_Free(md->var);
   for (i=0;i<nb;i++) 
     freehmm(md->mds+i);
-  free(md->mds);
-  free(md);
+  R_Free(md->mds);
+  R_Free(md);
   *md_pt=NULL;
 }
 
@@ -302,8 +302,8 @@ double gauss_pdf_log(double *ft, GaussModel *gm)
   tpdb = -((double)(gm->dim))/2.0*LOG_2_PI-0.5*gm->sigma_det_log;
   res = tpdb +(-0.5)*tpdb2;
 
-  free(db_array);
-  free(dif);
+  R_Free(db_array);
+  R_Free(dif);
 
   return(res);
 }
@@ -319,7 +319,7 @@ double mix_gauss_pdf_log(double *ft, GaussModel **gmlist, double *prior,
   double res, *h, v1,v2;
   int i;
 
-  h=(double *)calloc(ncmp,sizeof(double));
+  h=(double *)R_Calloc((size_t)ncmp,double);
   for (i=0;i<ncmp;i++)
     h[i]=gauss_pdf_log(ft, gmlist[i]);
 
@@ -332,7 +332,7 @@ double mix_gauss_pdf_log(double *ft, GaussModel **gmlist, double *prior,
 
   if (v2>0.0)  res=v1+log(v2); else res=-HUGE_VAL;
 
-  free(h);
+  R_Free(h);
   return(res);
 }
 

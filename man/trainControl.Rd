@@ -4,8 +4,13 @@
 \alias{trainControl}
 \title{Parameters for HMM-VB training.}
 \usage{
-trainControl(ninit0 = 1, ninit1 = 0, ninit2 = 0, epsilon = 1e-04,
-  diagCov = FALSE)
+trainControl(
+  ninit0 = 1,
+  ninit1 = 0,
+  ninit2 = 0,
+  epsilon = 1e-04,
+  diagCov = FALSE
+)
 }
 \arguments{
 \item{ninit0}{The number of initializations for default scheme 0, under

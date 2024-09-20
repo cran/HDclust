@@ -4,8 +4,13 @@
 \alias{hmmvbTrain}
 \title{Train HMM-VB}
 \usage{
-hmmvbTrain(data, VbStructure = NULL, searchControl = vbSearchControl(),
-  trControl = trainControl(), nthread = 1)
+hmmvbTrain(
+  data,
+  VbStructure = NULL,
+  searchControl = vbSearchControl(),
+  trControl = trainControl(),
+  nthread = 1
+)
 }
 \arguments{
 \item{data}{A numeric vector, matrix, or data frame of observations.
@@ -64,7 +69,7 @@ show(hmmvb)
 # and several threads
 data("sim2")
 set.seed(12345)
-hmmvb <- hmmvbTrain(sim2[1:5], searchControl=vbSearchControl(nperm=10), nthread=3)
+hmmvb <- hmmvbTrain(sim2[1:5], searchControl=vbSearchControl(nperm=10), nthread=1)
 show(hmmvb)}
 }
 \seealso{

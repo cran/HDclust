@@ -4,8 +4,7 @@
 \alias{clustControl}
 \title{Parameters for MBM clustering algorithm.}
 \usage{
-clustControl(minSize = 1, modeTh = 0.01, useL1norm = FALSE,
-  getlikelh = FALSE)
+clustControl(minSize = 1, modeTh = 0.01, useL1norm = FALSE, getlikelh = FALSE)
 }
 \arguments{
 \item{minSize}{Minimum cluster size. Clusters that contain the number of data points

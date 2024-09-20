@@ -34,7 +34,7 @@
 #endif
 
 #include <Rcpp.h>
-
+using namespace Rcpp;
 // [[Rcpp::plugins(openmp)]]
 
 int DIAGCOV;
@@ -82,7 +82,7 @@ void forward(double *u, double *thetalog, CondChain *md, double *loglikehd)
   maxnumst=md->maxnumst;
   cbdim=md->cbdim;
 
-  buf=(double *)calloc(maxnumst,sizeof(double));
+  buf=(double *)R_Calloc((size_t)maxnumst,double);
 
   /* treat the first position */
   a=md->mds[0]->a00;
@@ -141,7 +141,7 @@ void forward(double *u, double *thetalog, CondChain *md, double *loglikehd)
   
   *loglikehd=v3;
 
-  free(buf); 
+  R_Free(buf); 
 }
 
 
@@ -159,7 +159,7 @@ void backward(double *u, double *betalog, CondChain *md)
   maxnumst=md->maxnumst;
   cbdim=md->cbdim;
 
-  buf=(double *)calloc(maxnumst,sizeof(double));
+  buf=(double *)R_Calloc((size_t)maxnumst,double);
 
   /* treat the last block */
   for (l=0; l<numst[nb-1]; l++) {
@@ -193,7 +193,7 @@ void backward(double *u, double *betalog, CondChain *md)
     }
   }
 
-  free(buf);
+  R_Free(buf);
 }
 
 
@@ -329,8 +329,8 @@ void viterbi(CondChain *md, double *u, int *optst, double *inita, double *lastme
   cbdim=md->cbdim;
   maxnumst=md->maxnumst;
 
-  prest=(int *)calloc(nb*maxnumst,sizeof(int));
-  merit=(double *)calloc(nb*maxnumst,sizeof(double));
+  prest=(int *)R_Calloc((size_t)nb*maxnumst,int);
+  merit=(double *)R_Calloc((size_t)nb*maxnumst,double);
 
   if (inita==NULL)
     astart=md->mds[0]->a00;
@@ -408,8 +408,8 @@ void viterbi(CondChain *md, double *u, int *optst, double *inita, double *lastme
     optst[j]=prest[(j+1)*maxnumst+optst[j+1]];
   }
   
-  free(prest);
-  free(merit);
+  R_Free(prest);
+  R_Free(merit);
 }
 
 
@@ -444,8 +444,16 @@ void initialize(double *u, int nseq, int dim, HmmModel *md, int ranflag)
   numst=md->numst;
   prenumst=md->prenumst;
 
-  code=(int *)calloc(nseq,sizeof(int));
-  cdbk=(double *)calloc(numst*dim,sizeof(double)); //May 9, 2016
+  if (nseq<0||nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  if (numst*dim <0|| numst*dim >SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  code=(int *)R_Calloc((size_t)nseq,int);
+  cdbk=(double *)R_Calloc((size_t)numst*dim,double); //May 9, 2016
   matrix_2d_double(&sigcom, dim, dim);
 
   if (!ranflag) {
@@ -594,8 +602,8 @@ void initialize(double *u, int nseq, int dim, HmmModel *md, int ranflag)
     for (j=0; j<numst; j++)
       md->a[i][j]=tpdb;
   
-  free(cdbk);
-  free(code);
+  R_Free(cdbk);
+  R_Free(code);
   free_matrix_2d_double(&sigcom, dim);
 }
 
@@ -612,7 +620,12 @@ void initialize2(double *u, int nseq, int dim, HmmModel *md, double *cdbk)
   numst=md->numst;
   prenumst=md->prenumst;
 
-  code=(int *)calloc(nseq,sizeof(int));
+  if (nseq<0||nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+
+  code=(int *)R_Calloc((size_t)nseq,int);
   matrix_2d_double(&sigcom, dim, dim);
 
   encode(cdbk,dim,numst,u,code,nseq);    
@@ -744,7 +757,7 @@ void initialize2(double *u, int nseq, int dim, HmmModel *md, double *cdbk)
     for (j=0; j<numst; j++)
       md->a[i][j]=tpdb;
   
-  free(code);
+  R_Free(code);
   free_matrix_2d_double(&sigcom, dim);
 }
 
@@ -758,7 +771,12 @@ void initial_ccm(double **u,int nseq, CondChain *md)
   nb=md->nb; bdim=md->bdim; 
  
   for (i=0,m=0;i<nb;i++) {if (bdim[i]>m) m=bdim[i];} // find largest dimension in blocks
-  ublock=(double *)calloc(nseq*m,sizeof(double));
+
+  if (nseq*m <0||nseq*m > SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  ublock=(double *)R_Calloc((size_t)nseq*m,double);
   
   for (ii=0;ii<nb;ii++) {
     //fprintf(stdout, "inside initial_ccm, ii=%d, bdim[ii]=%d, cbdim[ii]=%d\n",ii,bdim[ii], md->cbdim[ii]);
@@ -768,7 +786,7 @@ void initial_ccm(double **u,int nseq, CondChain *md)
 	ublock[i*bdim[ii]+j]=u[i][md->cbdim[ii]+j]; 
     initialize(ublock, nseq, bdim[ii], md->mds[ii],0);//use clustering to initialize
   }
-  free(ublock);
+  R_Free(ublock);
 }
 
 void initial_ccm1(double **u,int nseq, CondChain *md, int sd)
@@ -787,12 +805,18 @@ void initial_ccm1(double **u,int nseq, CondChain *md, int sd)
 
   // select randomly nseq2 samples
   for (i=0,m=0;i<nb;i++) {if (bdim[i]>m) m=bdim[i];} // find largest dimension
-  ublock=(double *)calloc(nseq2*m,sizeof(double));
-  u2=(double **)calloc(nseq2,sizeof(double *));
 
-  buf=(double *)calloc(nseq,sizeof(double));
-  buf2=(double *)calloc(nseq,sizeof(double));
-  id=(int *)calloc(nseq,sizeof(int));
+  if (nseq2*m<0||nseq2*m>SIZE_MAX || nseq<0 || nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+
+  ublock=(double *)R_Calloc((size_t)nseq2*m,double);
+  u2=(double **)R_Calloc((size_t)nseq2,double *);
+
+  buf=(double *)R_Calloc((size_t)nseq,double);
+  buf2=(double *)R_Calloc((size_t)nseq,double);
+  id=(int *)R_Calloc((size_t)nseq,int);
   //srand48(sd);
   //for (i=0;i<nseq;i++) buf[i]=drand48();
   for (i=0;i<nseq;i++) buf[i]= R::runif(0,1);
@@ -800,9 +824,9 @@ void initial_ccm1(double **u,int nseq, CondChain *md, int sd)
   SortDouble(buf,buf2,id,nseq);
 
   for (i=0;i<nseq2;i++) u2[i]=u[id[i]];
-  free(buf);
-  free(buf2);
-  free(id);
+  R_Free(buf);
+  R_Free(buf2);
+  R_Free(id);
 
   for (ii=0;ii<nb;ii++) {
     //fprintf(stdout, "inside initial_ccm1, ii=%d, bdim[ii]=%d, cbdim[ii]=%d\n",ii,bdim[ii], md->cbdim[ii]);
@@ -813,8 +837,8 @@ void initial_ccm1(double **u,int nseq, CondChain *md, int sd)
     initialize(ublock, nseq2, bdim[ii], md->mds[ii],0);//use clustering to initialize
   }
 
-  free(ublock);
-  free(u2);
+  R_Free(ublock);
+  R_Free(u2);
 }
 
 void initial_ccm2(double **u,int nseq, CondChain *md, int sd)
@@ -830,21 +854,28 @@ void initial_ccm2(double **u,int nseq, CondChain *md, int sd)
     if (bdim[i]>m) m=bdim[i];
     if (numst[i]>n) n=numst[i];
   }
-  ublock=(double *)calloc(nseq*m,sizeof(double));
-  cdbk=(double *)calloc(n*m,sizeof(double));
+
+  if (nseq*m<0||nseq*m>SIZE_MAX || n*m<0 || n*m>SIZE_MAX || nseq<0 || nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+
+
+  ublock=(double *)R_Calloc((size_t)nseq*m,double);
+  cdbk=(double *)R_Calloc((size_t)n*m,double);
 
   double *buf, *buf2;
   int *id;
-  buf=(double *)calloc(nseq,sizeof(double));
-  buf2=(double *)calloc(nseq,sizeof(double));
-  id=(int *)calloc(nseq,sizeof(int));
+  buf=(double *)R_Calloc((size_t)nseq,double);
+  buf2=(double *)R_Calloc((size_t)nseq,double);
+  id=(int *)R_Calloc((size_t)nseq,int);
   //srand48(sd);
   //for (i=0;i<nseq;i++) buf[i]=drand48();
   for (i=0;i<nseq;i++) buf[i]=R::runif(0,1);
    
   SortDouble(buf,buf2,id,nseq);
-  free(buf);
-  free(buf2);
+  R_Free(buf);
+  R_Free(buf2);
     
   for (ii=0;ii<nb;ii++) {
     //fprintf(stdout, "inside initial_ccm2, ii=%d, bdim[ii]=%d, cbdim[ii]=%d\n",ii,bdim[ii], md->cbdim[ii]);
@@ -860,9 +891,9 @@ void initial_ccm2(double **u,int nseq, CondChain *md, int sd)
     initialize2(ublock, nseq, bdim[ii], md->mds[ii],cdbk);//use clustering to initialize
   }
   
-  free(ublock);
-  free(cdbk);
-  free(id);
+  R_Free(ublock);
+  R_Free(cdbk);
+  R_Free(id);
 }
 
 /*-----------------------------------------------------------*/
@@ -880,7 +911,13 @@ double comploglike(CondChain *md, double **u, int nseq, double *wt, double *logl
   numst=md->numst; //number of states per block
 
   for (i=0,m=0;i<nb;i++) m+=numst[i];
-  thetalog=(double *)calloc(m, sizeof(double));
+
+  if (m<0|| m>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+
+  thetalog=(double *)R_Calloc((size_t)m, double);
 
   for (i=0, loglikehd=0.0; i<nseq; i++) {
     forward(u[i],thetalog,md,logl+i);
@@ -888,7 +925,7 @@ double comploglike(CondChain *md, double **u, int nseq, double *wt, double *logl
     else loglikehd += wt[i]*logl[i];
   }
 
-  free(thetalog);
+  R_Free(thetalog);
   return(loglikehd);
 }
 	
@@ -913,8 +950,12 @@ double classlikehd(CondChain *md, double **u, int nseq, double ***cprob, double 
   numst=md->numst; //number of states per block
 
   for (i=0,m=0;i<nb;i++) m+=numst[i];
-  thetalog=(double *)calloc(m, sizeof(double));
-  betalog=(double *)calloc(m, sizeof(double));
+  if (m<0||m>SIZE_MAX ) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  thetalog=(double *)R_Calloc((size_t)m, double);
+  betalog=(double *)R_Calloc((size_t)m, double);
 
   loglikehd=0.0;
   for (ii=0;ii<nseq;ii++) {
@@ -938,8 +979,8 @@ double classlikehd(CondChain *md, double **u, int nseq, double ***cprob, double 
     }
   }
 
-  free(thetalog);
-  free(betalog);
+  R_Free(thetalog);
+  R_Free(betalog);
   return(loglikehd);
 }
 
@@ -997,17 +1038,17 @@ int baumwelch(double **u, int nseq, CondChain *md, double *loglikehd,
   nb=md->nb;
   numst=md->numst; //number of states per block
   bdim=md->bdim;
-  prenumst=(int *)calloc(nb,sizeof(int));
+  prenumst=(int *)R_Calloc((size_t)nb,int);
   for (i=0;i<nb;i++) prenumst[i]=md->mds[i]->prenumst;
 
   if (nseq==0) return(res);
 
-  musum=(double **)calloc(nb,sizeof(double *));
-  mom2sum=(double ***)calloc(nb,sizeof(double **));
-  sigma=(double ***)calloc(nb,sizeof(double **));
-  sigcom=(double ***)calloc(nb,sizeof(double **));
-  asum=(double ***)calloc(nb,sizeof(double **));
-  lsum=(double **)calloc(nb,sizeof(double *));
+  musum=(double **)R_Calloc((size_t)nb,double *);
+  mom2sum=(double ***)R_Calloc((size_t)nb,double **);
+  sigma=(double ***)R_Calloc((size_t)nb,double **);
+  sigcom=(double ***)R_Calloc((size_t)nb,double **);
+  asum=(double ***)R_Calloc((size_t)nb,double **);
+  lsum=(double **)R_Calloc((size_t)nb,double *);
   
   for (i=0;i<nb;i++) {
     vector_double(musum+i, numst[i]*bdim[i]);
@@ -1032,10 +1073,10 @@ int baumwelch(double **u, int nseq, CondChain *md, double *loglikehd,
 	//if (omp_get_thread_num() == 0)
 		//Rcpp::Rcout << "num_threads = " << omp_get_num_threads() << "\n";
 	
-	mu=(double **)calloc(nb,sizeof(double *));
-	mom2=(double ***)calloc(nb,sizeof(double **));
-	l1img=(double **)calloc(nb,sizeof(double *));
-	a=(double ***)calloc(nb,sizeof(double **));
+	mu=(double **)R_Calloc((size_t)nb,double *);
+	mom2=(double ***)R_Calloc((size_t)nb,double **);
+	l1img=(double **)R_Calloc((size_t)nb,double *);
+	a=(double ***)R_Calloc((size_t)nb,double **);
 
 	for (i=0;i<nb;i++) {
 		vector_double(mu+i, numst[i]*bdim[i]);
@@ -1045,11 +1086,14 @@ int baumwelch(double **u, int nseq, CondChain *md, double *loglikehd,
 	}
 	
 	for (i=0,m=0;i<nb;i++) m+=numst[i];
-	thetalog=(double *)calloc(m, sizeof(double));
-	betalog=(double *)calloc(m, sizeof(double));
-
+	if (m<0|| m>SIZE_MAX ) {
+	  Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+	  
+	}
+	thetalog=(double *)R_Calloc((size_t)m, double);
+	betalog=(double *)R_Calloc((size_t)m, double);
 	
-    while (ite<minite || twomdflag==0 || ratio>epsilon) {
+	while (ite<minite || twomdflag==0 || ratio>epsilon) {
       
 		/* Initialization */
 		for (ii=0;ii<nb;ii++) {
@@ -1279,33 +1323,33 @@ int baumwelch(double **u, int nseq, CondChain *md, double *loglikehd,
 	  
 	  // free memory
 	  for (i=0;i<nb;i++) {
-		free(mu[i]);
+		R_Free(mu[i]);
     	free_matrix_2d_double(mom2+i, numst[i]*bdim[i]);
     	free_matrix_2d_double(a+i, prenumst[i]);
-		free(l1img[i]);
+		R_Free(l1img[i]);
 	  }
-	  free(mu);
-	  free(a);
-	  free(l1img);
-	  free(mom2);
-	  free(thetalog);
-	  free(betalog);
+	  R_Free(mu);
+	  R_Free(a);
+	  R_Free(l1img);
+	  R_Free(mom2);
+	  R_Free(thetalog);
+	  R_Free(betalog);
   
   } // end omp parallel
   *lhsumpt=lhsum;
 
   for (i=0;i<nb;i++) {
-    free(musum[i]);
+    R_Free(musum[i]);
     free_matrix_2d_double(mom2sum+i, numst[i]*bdim[i]);
     free_matrix_2d_double(sigma+i, numst[i]*bdim[i]);
     free_matrix_2d_double(sigcom+i,bdim[i]);
     free_matrix_2d_double(asum+i, prenumst[i]);
-    free(lsum[i]);
+    R_Free(lsum[i]);
   }
   
-  free(musum);free(mom2sum);free(sigma);free(sigcom);
-  free(asum);free(lsum);
-  free(prenumst);
+  R_Free(musum);R_Free(mom2sum);R_Free(sigma);R_Free(sigcom);
+  R_Free(asum);R_Free(lsum);
+  R_Free(prenumst);
 
   return res;
 }
@@ -1318,7 +1362,7 @@ void ordervar(double **u,int nseq, int nb, int *bdim, int **var)
   double *buf;
   
   for (i=0,dim=0;i<nb;i++) dim+=bdim[i];
-  buf=(double *)calloc(dim,sizeof(double));
+  buf=(double *)R_Calloc((size_t)dim,double);
 
   for (i=0;i<nseq;i++) {
     for (j=0,m=0;j<nb;j++) 
@@ -1329,7 +1373,7 @@ void ordervar(double **u,int nseq, int nb, int *bdim, int **var)
     for (j=0;j<dim;j++) u[i][j]=buf[j];
   }
 
-  free(buf);
+  R_Free(buf);
 }
 
 //Intended to use for selection of variable blocks, the original input u[][]
@@ -1353,9 +1397,13 @@ void ordervar2(double **u, double ***u2_pt, int nseq, int nb, int *bdim, int **v
   //if (dim==0) {
     //Rcpp::stop("Dimension is zero in ordervar2\n");
   //}
-  
-  u2=(double **)calloc(nseq,sizeof(double *));
-  for (i=0;i<nseq;i++) u2[i]=(double *)calloc(dim,sizeof(double));
+
+  if (nseq<0 || nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
+  u2=(double **)R_Calloc((size_t)nseq,double *);
+  for (i=0;i<nseq;i++) u2[i]=(double *)R_Calloc((size_t)dim,double);
   
   for (i=0;i<nseq;i++) {
     for (j=0,m=0;j<nb;j++) 
@@ -1388,13 +1436,17 @@ void hmmfit(double **u, int nseq, int nb, int *bdim, int **var, int *numst, Cond
 
   /** start em iterative estimation **/
   if (wt==NULL) {
-    thiswt=(double *)calloc(nseq, sizeof(double));
+    if (nseq<0 || nseq>SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+      
+    }
+    thiswt=(double *)R_Calloc((size_t)nseq, double);
     for (i=0;i<nseq;i++) thiswt[i]=1.0;
   } else {thiswt=wt;}
 
   baumwelch(u, nseq, md, loglikehd, lhsumpt, epsilon, thiswt);
 
-  if (wt==NULL) free(thiswt);
+  if (wt==NULL) R_Free(thiswt);
 
 }
 
@@ -1427,15 +1479,24 @@ void hmmfit_minit(double **u, int nseq, int nb, int *bdim, int **var, int *numst
   ninit=ninit1+ninit2+ninit0;
   if (ninit==0) {ninit=ninit0=1;}
 
-  mymd=(CondChain **)calloc(ninit,sizeof(CondChain *));
-  for (i=0;i<ninit;i++)
-    mymd[i]=(CondChain *)calloc(1,sizeof(CondChain));
+    
+  if (nseq*ninit<0||nseq*ninit>SIZE_MAX || nseq<0 || nseq>SIZE_MAX || ninit<0 || ninit>SIZE_MAX  ) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
 
-  lhsum=(double *)calloc(ninit,sizeof(double));
-  mylikehd=(double *)calloc(ninit*nseq,sizeof(double));
+  mymd=(CondChain **)R_Calloc((size_t)ninit,CondChain *);
+  for (i=0;i<ninit;i++)
+    mymd[i]=(CondChain *)R_Calloc(1,CondChain);
+
+  lhsum=(double *)R_Calloc((size_t)ninit,double);
+  mylikehd=(double *)R_Calloc((size_t)ninit*nseq,double);
 
   if (wt==NULL) {
-    thiswt=(double *)calloc(nseq, sizeof(double));
+    if (nseq<0||nseq>SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    }
+    thiswt=(double *)R_Calloc((size_t)nseq, double);
     for (i=0;i<nseq;i++) thiswt[i]=1.0;
   } else {thiswt=wt;}
   
@@ -1467,12 +1528,12 @@ void hmmfit_minit(double **u, int nseq, int nb, int *bdim, int **var, int *numst
 
   //fprintf(stdout, "Choose initialiation: %d, likelihood: %e\n", n,*lhsumpt);
 
-  if (wt==NULL) free(thiswt);
-  free(lhsum);
-  free(mylikehd);
+  if (wt==NULL) R_Free(thiswt);
+  R_Free(lhsum);
+  R_Free(mylikehd);
   // Release each mymd[]
   for (m=0;m<ninit;m++) { if (m==n) continue; freeccm(&(mymd[m])); }
-  free(mymd);
+  R_Free(mymd);
 }
 
 /*------------------------------------------------------------------------*/
@@ -1498,15 +1559,23 @@ void hmmfit_minit2(double **u, int nseq, int nb, int *bdim, int **var, int *nums
   ninit=ninit1+ninit2+ninit0;
   if (ninit==0) { ninit=ninit0=1;}
 
-  mymd=(CondChain **)calloc(ninit,sizeof(CondChain *));
-  for (i=0;i<ninit;i++)
-    mymd[i]=(CondChain *)calloc(1,sizeof(CondChain));
+  if (nseq*ninit<0||nseq*ninit>SIZE_MAX || nseq<0 || nseq>SIZE_MAX || ninit<0 || ninit>SIZE_MAX  ) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    
+  }
 
-  lhsum=(double *)calloc(ninit,sizeof(double));
-  mylikehd=(double *)calloc(ninit*nseq,sizeof(double));
+  mymd=(CondChain **)R_Calloc((size_t)ninit,CondChain *);
+  for (i=0;i<ninit;i++)
+    mymd[i]=(CondChain *)R_Calloc(1,CondChain);
+
+  lhsum=(double *)R_Calloc((size_t)ninit,double);
+  mylikehd=(double *)R_Calloc((size_t)ninit*nseq,double);
 
   if (wt==NULL) {
-    thiswt=(double *)calloc(nseq, sizeof(double));
+    if (nseq<0||nseq>SIZE_MAX) {
+      Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+    }
+    thiswt=(double *)R_Calloc((size_t)nseq, double);
     for (i=0;i<nseq;i++) thiswt[i]=1.0;
   } else {thiswt=wt;}
   
@@ -1538,15 +1607,15 @@ void hmmfit_minit2(double **u, int nseq, int nb, int *bdim, int **var, int *nums
 
   //fprintf(stdout, "Choose initialiation: %d, likelihood: %e\n", n,*lhsumpt);
 
-  if (wt==NULL) free(thiswt);
-  free(lhsum);
-  free(mylikehd);
+  if (wt==NULL) R_Free(thiswt);
+  R_Free(lhsum);
+  R_Free(mylikehd);
   // Release each mymd[]
   for (m=0;m<ninit;m++) { if (m==n) continue; freeccm(&(mymd[m])); }
-  free(mymd);
+  R_Free(mymd);
 
-  for (i=0;i<nseq;i++) free(u2[i]);
-  free(u2);
+  for (i=0;i<nseq;i++) R_Free(u2[i]);
+  R_Free(u2);
 }
 
 
@@ -1557,8 +1626,8 @@ void permutevar(int dim, int np, int **vlist)
   //int v[10]={0,1};//v[10]={2,5,7,4,3,0,1,6,0,0};
   //int v[10]={2,5,7,4,3,0,1,6,0,0};
   
-  buf=(double *)calloc(dim,sizeof(double));
-  buf2=(double *)calloc(dim,sizeof(double));
+  buf=(double *)R_Calloc((size_t)dim,double);
+  buf2=(double *)R_Calloc((size_t)dim,double);
 
   //srand48(0);
   for (ii=0;ii<np;ii++) {
@@ -1588,8 +1657,8 @@ void permutevar(int dim, int np, int **vlist)
   fprintf(stderr, "\n"); 
   ***/
   
-  free(buf);
-  free(buf2);
+  R_Free(buf);
+  R_Free(buf2);
 }
 
 void setnumstate(int nb, int *bdim, int *numst, int *Numst0)
@@ -1788,9 +1857,9 @@ void hmmfit_vb(double **u, int nseq, int dim, int *snb, int **sbdim, int ***svar
   int **vlist;
   int *skipped,*buddy;
   
-  lhsum=(double *)calloc(dim,sizeof(double));
-  vlist=(int **)calloc(nperm,sizeof(int *));
-  for (i=0;i<nperm;i++) vlist[i]=(int *)calloc(dim,sizeof(int));
+  lhsum=(double *)R_Calloc((size_t)dim,double);
+  vlist=(int **)R_Calloc((size_t)nperm,int *);
+  for (i=0;i<nperm;i++) vlist[i]=(int *)R_Calloc((size_t)dim,int);
   for (i=0;i<(nperm0<nperm?nperm0:nperm);i++)
     for (j=0;j<dim;j++) // was dim before; modified 05/23/18
       vlist[i][j]=vlist0[i][j];
@@ -1798,25 +1867,25 @@ void hmmfit_vb(double **u, int nseq, int dim, int *snb, int **sbdim, int ***svar
   if (nperm>nperm0) permutevar(dim,nperm-nperm0,vlist+nperm0);//randomly generated permutations
 
   //Allocate space to get ready for recursive fitting
-  numst=(int *)calloc(dim,sizeof(int));
-  bdim=(int *)calloc(dim,sizeof(int));
-  bdim0=(int *)calloc(dim,sizeof(int));
-  var=(int **)calloc(dim,sizeof(int *));
-  var0=(int **)calloc(dim,sizeof(int *));
+  numst=(int *)R_Calloc((size_t)dim,int);
+  bdim=(int *)R_Calloc((size_t)dim,int);
+  bdim0=(int *)R_Calloc((size_t)dim,int);
+  var=(int **)R_Calloc((size_t)dim,int *);
+  var0=(int **)R_Calloc((size_t)dim,int *);
   for (i=0;i<dim;i++) {
-    var[i]=(int *)calloc(dim,sizeof(int));
-    var0[i]=(int *)calloc(dim,sizeof(int));
+    var[i]=(int *)R_Calloc((size_t)dim,int);
+    var0[i]=(int *)R_Calloc((size_t)dim,int);
   }
 
-  lhsum1=(double *)calloc(nperm,sizeof(double));
-  nb1=(int *)calloc(nperm,sizeof(int));
-  bdim1=(int **)calloc(nperm,sizeof(int *));
-  for (i=0;i<nperm;i++) bdim1[i]=(int *)calloc(dim,sizeof(int));
-  var1=(int **)calloc(nperm,sizeof(int *));
-  for (i=0;i<nperm;i++) var1[i]=(int *)calloc(dim,sizeof(int));
+  lhsum1=(double *)R_Calloc((size_t)nperm,double);
+  nb1=(int *)R_Calloc((size_t)nperm,int);
+  bdim1=(int **)R_Calloc((size_t)nperm,int *);
+  for (i=0;i<nperm;i++) bdim1[i]=(int *)R_Calloc((size_t)dim,int);
+  var1=(int **)R_Calloc((size_t)nperm,int *);
+  for (i=0;i<nperm;i++) var1[i]=(int *)R_Calloc((size_t)dim,int);
   
-  skipped=(int *)calloc(dim+1,sizeof(int));
-  buddy=(int *)calloc(dim,sizeof(int));
+  skipped=(int *)R_Calloc((size_t)dim+1,int);
+  buddy=(int *)R_Calloc((size_t)dim,int);
   
   Progress p(nperm, true);
   
@@ -1943,11 +2012,11 @@ void hmmfit_vb(double **u, int nseq, int dim, int *snb, int **sbdim, int ***svar
   }
 
   *snb=nb1[m];
-  *sbdim=(int *)calloc(*snb,sizeof(int));
+  *sbdim=(int *)R_Calloc((size_t)*snb,int);
   for (i=0;i<*snb;i++) (*sbdim)[i]=bdim1[m][i];
-  *svar=(int **)calloc(*snb,sizeof(int *));
+  *svar=(int **)R_Calloc((size_t)*snb,int *);
   for (i=0;i<*snb;i++) {
-    (*svar)[i]=(int *)calloc((*sbdim)[i],sizeof(int));
+    (*svar)[i]=(int *)R_Calloc((size_t)(*sbdim)[i],int);
   }
 
   for (i=0,n=0;i<nb1[m];i++) {
@@ -1966,25 +2035,25 @@ void hmmfit_vb(double **u, int nseq, int dim, int *snb, int **sbdim, int ***svar
 		(double)epsilon, wt, ninit0, ninit1, ninit2, randomseed);
   (*lhsumpt)-=(double)(computenp(*snb, *sbdim,numst))*log((double)nseq)*0.5; //BIC
   
-  for (i=0;i<nperm;i++) free(vlist[i]);
-  free(vlist);
-  free(lhsum);
+  for (i=0;i<nperm;i++) R_Free(vlist[i]);
+  R_Free(vlist);
+  R_Free(lhsum);
 
   for (i=0;i<dim;i++) {
-    free(var[i]);
-    free(var0[i]);
+    R_Free(var[i]);
+    R_Free(var0[i]);
   }
-  free(var); free(var0); free(bdim); free(bdim0);
-  free(numst);
+  R_Free(var); R_Free(var0); R_Free(bdim); R_Free(bdim0);
+  R_Free(numst);
 
-  free(lhsum1);
-  free(nb1);
+  R_Free(lhsum1);
+  R_Free(nb1);
   for (i=0;i<nperm;i++) {
-    free(bdim1[i]);
-    free(var1[i]);
+    R_Free(bdim1[i]);
+    R_Free(var1[i]);
   }
-  free(bdim1); free(var1);
+  R_Free(bdim1); R_Free(var1);
   
-  free(skipped);
-  free(buddy);
+  R_Free(skipped);
+  R_Free(buddy);
 }

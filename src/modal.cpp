@@ -58,7 +58,7 @@ void SortInt(int *org, int *buf, int *invid, int sz)
   int j;
   SORT_INT *score;
 
-  score=(SORT_INT *)calloc(sz,sizeof(SORT_INT));
+  score=(SORT_INT *)R_Calloc((size_t)sz,SORT_INT);
   
   try {
     if (score==NULL) {         	
@@ -86,7 +86,7 @@ void SortInt(int *org, int *buf, int *invid, int sz)
     invid[j]=score[j].id; //store the original id for the new order
   }
 
-  free(score);
+  R_Free(score);
 }
 
 //Assume the integer arrays have been sorted lexicographically by
@@ -135,11 +135,11 @@ void SortLexigraphicInt(int **orgmat, int **bufmat, int *invid, int dim, int sz)
   int *org, *buf, **buf2, *invid0, *invid2;
   int i,k, stpos, edpos,mm;
 
-  org=(int *)calloc(sz,sizeof(int));
-  buf=(int *)calloc(sz,sizeof(int));
-  invid0=(int *)calloc(sz,sizeof(int));
-  invid2=(int *)calloc(sz,sizeof(int));
-  buf2=(int **)calloc(sz,sizeof(int *));
+  org=(int *)R_Calloc((size_t)sz,int);
+  buf=(int *)R_Calloc((size_t)sz,int);
+  invid0=(int *)R_Calloc((size_t)sz,int);
+  invid2=(int *)R_Calloc((size_t)sz,int);
+  buf2=(int **)R_Calloc((size_t)sz,int *);
 
   for (i=0;i<sz;i++) {
     bufmat[i]=orgmat[i];
@@ -198,11 +198,11 @@ void SortLexigraphicInt(int **orgmat, int **bufmat, int *invid, int dim, int sz)
     }
   }
 
-  free(org);
-  free(buf);
-  free(buf2);
-  free(invid0);
-  free(invid2);
+  R_Free(org);
+  R_Free(buf);
+  R_Free(buf2);
+  R_Free(invid0);
+  R_Free(invid2);
 }
 
 void SortDouble(double *org, double *buf, int *invid, int sz)
@@ -210,11 +210,11 @@ void SortDouble(double *org, double *buf, int *invid, int sz)
   int j;
   SORT_DOUBLE *score;
 
-  score=(SORT_DOUBLE *)calloc(sz,sizeof(SORT_DOUBLE));
+  score=(SORT_DOUBLE *)R_Calloc((size_t)sz,SORT_DOUBLE);
   
   try {
     if (score==NULL) {
-      free(score);
+      R_Free(score);
       throw std::range_error("Unable to allocate space in SortDouble");
     }
   } catch(std::exception &ex) {	
@@ -224,7 +224,7 @@ void SortDouble(double *org, double *buf, int *invid, int sz)
   }
   
   //if (score==NULL) {
-    //free(score);
+    //R_Free(score);
     //Rcpp::stop("Unable to allocate space in SortDouble.\n");
   //}
 
@@ -239,7 +239,7 @@ void SortDouble(double *org, double *buf, int *invid, int sz)
     invid[j]=score[j].id; //store the original id for the new order
   }
 
-  free(score);
+  R_Free(score);
 }
 
 int CountDif(int *buf, int len) //assume sorted array 
@@ -305,7 +305,7 @@ void standarddev(double **u, int nseq, int dim, double *sigma)
   int i,j;
   double *mu;
   
-  mu=(double *)calloc(dim,sizeof(double));
+  mu=(double *)R_Calloc((size_t)dim,double);
   for (i=0;i<dim;i++) { mu[i]=0.0; sigma[i]=0.0;}
 
   for (i=0;i<nseq;i++) {
@@ -322,7 +322,7 @@ void standarddev(double **u, int nseq, int dim, double *sigma)
     sigma[i]=sqrt(sigma[i]);
   }
 
-  free(mu);
+  R_Free(mu);
 }
 
 void wtsum_matrix(double *wt, double ***mat, int len, int nr, int nc, 
@@ -410,12 +410,12 @@ void sigmainv_array(CondChain *md, double *****sigma_inv_pt,
 
   nb=md->nb; numst=md->numst; bdim=md->bdim;
 
-  sigma_inv=(double ****)calloc(nb,sizeof(double ***));
-  sigmainvmu=(double ***)calloc(nb,sizeof(double **));
+  sigma_inv=(double ****)R_Calloc((size_t)nb,double ***);
+  sigmainvmu=(double ***)R_Calloc((size_t)nb,double **);
 
   for (i=0;i<nb;i++) {
-    sigma_inv[i]=(double ***)calloc(numst[i],sizeof(double **));
-    sigmainvmu[i]=(double **)calloc(numst[i],sizeof(double *));
+    sigma_inv[i]=(double ***)R_Calloc((size_t)numst[i],double **);
+    sigmainvmu[i]=(double **)R_Calloc((size_t)numst[i],double *);
   }
 
   for (i=0;i<nb;i++)
@@ -443,8 +443,8 @@ void sigmainv_array_gmm(GmmModel *md, double ****sigma_inv_pt,
 
   numst=md->numst; dim=md->dim;
 
-  sigma_inv=(double ***)calloc(numst,sizeof(double **));
-  sigmainvmu=(double **)calloc(numst,sizeof(double *));
+  sigma_inv=(double ***)R_Calloc((size_t)numst,double **);
+  sigmainvmu=(double **)R_Calloc((size_t)numst,double *);
 
   for (j=0;j<numst;j++) {
     matrix_2d_double(sigma_inv+j, dim,dim);
@@ -481,7 +481,7 @@ void DataSigma(double **u, double *sigmadat, int dim, int nseq)
 
   if (nseq==0) return;
   
-  mv=(double *)calloc(dim,sizeof(double));
+  mv=(double *)R_Calloc((size_t)dim,double);
   for (i=0;i<dim;i++) {
     mv[i]=0.0;
     sigmadat[i]=0.0;
@@ -498,7 +498,7 @@ void DataSigma(double **u, double *sigmadat, int dim, int nseq)
   }
 
   for (i=0;i<dim;i++) sigmadat[i]=sqrt(sigmadat[i]/(double)nseq);
-  free(mv);
+  R_Free(mv);
 }
 
 void OverallSigma_Gmm(GmmModel *md, double *sigma)
@@ -531,17 +531,17 @@ double bwmem(CondChain *md, double *x, double *res)
 
   matrix_2d_double(&wtsigmainv,maxdim,maxdim);
   matrix_2d_double(&wtsigma,maxdim,maxdim);
-  wtmu=(double *)calloc(maxdim,sizeof(double));
+  wtmu=(double *)R_Calloc((size_t)maxdim,double);
   for (i=0,m=0;i<nb;i++) m+=numst[i];
-  thetalog=(double *)calloc(m, sizeof(double));
-  betalog=(double *)calloc(m, sizeof(double));
+  thetalog=(double *)R_Calloc((size_t)m, double);
+  betalog=(double *)R_Calloc((size_t)m, double);
 
-  Lm=(double **)calloc(nb,sizeof(double *));
-  for (i=0;i<nb;i++) Lm[i]=(double *)calloc(numst[i],sizeof(double));
+  Lm=(double **)R_Calloc((size_t)nb,double *);
+  for (i=0;i<nb;i++) Lm[i]=(double *)R_Calloc((size_t)numst[i],double);
 
   for (i=0,dim=0;i<nb;i++)  dim+=bdim[i];
-  mode=(double *)calloc(dim,sizeof(double));
-  oldmode=(double *)calloc(dim,sizeof(double));
+  mode=(double *)R_Calloc((size_t)dim,double);
+  oldmode=(double *)R_Calloc((size_t)dim,double);
 
   sigmainv_array(md, &sigma_inv_pool, &sigmainvmu_pool);
 
@@ -550,7 +550,7 @@ double bwmem(CondChain *md, double *x, double *res)
   ite=0;
   oldloglike=1.0;
   //compute the proper sigma=sqrt(sigmasq);
-  sigma=(double *)calloc(dim,sizeof(double));
+  sigma=(double *)R_Calloc((size_t)dim,double);
   OverallSigma(md,sigma); //sigma of each dimension
 
   while (ite<maxite) {
@@ -581,23 +581,23 @@ double bwmem(CondChain *md, double *x, double *res)
   for (i=0;i<dim;i++) res[i]=mode[i];
   forward(res, thetalog, md, &loglike);
 
-  free(thetalog); free(betalog);
+  R_Free(thetalog); R_Free(betalog);
   free_matrix_2d_double(&wtsigmainv,maxdim);
   free_matrix_2d_double(&wtsigma,maxdim);
-  free(wtmu);
+  R_Free(wtmu);
   free_matrix_2d_double(&Lm,nb);
-  free(mode); free(oldmode); free(sigma);
+  R_Free(mode); R_Free(oldmode); R_Free(sigma);
 
   for (i=0;i<nb;i++) {
     for (j=0;j<numst[i];j++) {
       free_matrix_2d_double(sigma_inv_pool[i]+j,bdim[i]);
-      free(sigmainvmu_pool[i][j]);
+      R_Free(sigmainvmu_pool[i][j]);
     }
-    free(sigma_inv_pool[i]);
-    free(sigmainvmu_pool[i]);
+    R_Free(sigma_inv_pool[i]);
+    R_Free(sigmainvmu_pool[i]);
   }
-  free(sigma_inv_pool);
-  free(sigmainvmu_pool);
+  R_Free(sigma_inv_pool);
+  R_Free(sigmainvmu_pool);
 
   return(loglike);
 }
@@ -643,11 +643,11 @@ double mem(GmmModel *md, double *x, double *res)
 
   matrix_2d_double(&wtsigmainv,dim,dim);
   matrix_2d_double(&wtsigma,dim,dim);
-  wtmu=(double *)calloc(dim,sizeof(double));
-  Lm=(double *)calloc(numst,sizeof(double));//posterior prob
+  wtmu=(double *)R_Calloc((size_t)dim,double);
+  Lm=(double *)R_Calloc((size_t)numst,double);//posterior prob
 
-  mode=(double *)calloc(dim,sizeof(double));
-  oldmode=(double *)calloc(dim,sizeof(double));
+  mode=(double *)R_Calloc((size_t)dim,double);
+  oldmode=(double *)R_Calloc((size_t)dim,double);
 
   sigmainv_array_gmm(md, &sigma_inv_pool, &sigmainvmu_pool);
 
@@ -656,7 +656,7 @@ double mem(GmmModel *md, double *x, double *res)
   ite=0;
   oldloglike=1.0;
   //compute the proper sigma=sqrt(sigmasq);
-  sigma=(double *)calloc(dim,sizeof(double));
+  sigma=(double *)R_Calloc((size_t)dim,double);
   OverallSigma_Gmm(md,sigma);
 
   while (ite<maxite) {
@@ -684,15 +684,15 @@ double mem(GmmModel *md, double *x, double *res)
 
   free_matrix_2d_double(&wtsigmainv,dim);
   free_matrix_2d_double(&wtsigma,dim);
-  free(wtmu);
-  free(Lm);
-  free(mode); free(oldmode); free(sigma);
+  R_Free(wtmu);
+  R_Free(Lm);
+  R_Free(mode); R_Free(oldmode); R_Free(sigma);
 
   for (j=0;j<numst;j++) {
     free_matrix_2d_double(sigma_inv_pool+j,dim);
-    free(sigmainvmu_pool[j]);
+    R_Free(sigmainvmu_pool[j]);
   }
-  free(sigma_inv_pool); free(sigmainvmu_pool);
+  R_Free(sigma_inv_pool); R_Free(sigmainvmu_pool);
 
   return(loglike);
 }
@@ -701,13 +701,13 @@ void SetCompMode(CompMode *cpm, int *optst, CondChain *md)
 {
   int i,j,k,dim;
 
-  cpm->st=(int *)calloc(md->nb,sizeof(int));
+  cpm->st=(int *)R_Calloc((size_t)md->nb,int);
   for (i=0,dim=0;i<md->nb;i++) {
     cpm->st[i]=optst[i];
     dim+=md->bdim[i];
   }
-  cpm->mu=(double *)calloc(dim,sizeof(double));
-  cpm->mode=(double *)calloc(dim,sizeof(double));
+  cpm->mu=(double *)R_Calloc((size_t)dim,double);
+  cpm->mode=(double *)R_Calloc((size_t)dim,double);
 
   for (i=0,k=0;i<md->nb;i++) 
     for (j=0;j<md->bdim[i];j++) {
@@ -717,9 +717,9 @@ void SetCompMode(CompMode *cpm, int *optst, CondChain *md)
 }
 void freeCompMode(CompMode *cpm)
 {
-  free(cpm->st);
-  free(cpm->mu);
-  free(cpm->mode);
+  R_Free(cpm->st);
+  R_Free(cpm->mu);
+  R_Free(cpm->mode);
 }
 
 void SetCompLogprior(double *logprior, int *mypath, CondChain *md)
@@ -741,8 +741,8 @@ int FuseGauss(GaussModel *gmd, int **mypath, int len, CondChain *md)
 
   dim=gmd->dim;
 
-  logprior=(double *)calloc(len,sizeof(double));
-  prior=(double *)calloc(len,sizeof(double));
+  logprior=(double *)R_Calloc((size_t)len,double);
+  prior=(double *)R_Calloc((size_t)len,double);
   for (i=0;i<len;i++)
     SetCompLogprior(logprior+i, mypath[i],md);
 
@@ -756,9 +756,9 @@ int FuseGauss(GaussModel *gmd, int **mypath, int len, CondChain *md)
   }
   for (i=0;i<len;i++) prior[i]=logprior[i]/db2;
 
-  mu=(double *)calloc(dim,sizeof(double));
-  sigma2=(double **)calloc(dim,sizeof(double *));
-  for (i=0;i<dim;i++) sigma2[i]=(double *)calloc(dim,sizeof(double));
+  mu=(double *)R_Calloc((size_t)dim,double);
+  sigma2=(double **)R_Calloc((size_t)dim,double *);
+  for (i=0;i<dim;i++) sigma2[i]=(double *)R_Calloc((size_t)dim,double);
 
   //Initialization
   for (i=0;i<dim;i++) gmd->mean[i]=0.0;
@@ -822,11 +822,11 @@ int FuseGauss(GaussModel *gmd, int **mypath, int len, CondChain *md)
   }
 
 
-  free(logprior);
-  free(prior);
-  free(mu);
-  for (i=0;i<dim;i++) free(sigma2[i]);
-  free(sigma2);
+  R_Free(logprior);
+  R_Free(prior);
+  R_Free(mu);
+  for (i=0;i<dim;i++) R_Free(sigma2[i]);
+  R_Free(sigma2);
 
   if (mm==2 || (DIAGCOV!=1 && mysigma_det<=0)) { //non-positive definite covariance matrix    
     return(0);
@@ -868,17 +868,20 @@ void FindDifSeq(int **optst, int nseq, int nb, int ***newst_pt,
   int **newst;
   int **bufoptst, *invid, *id2;
 
-  bufoptst=(int **)calloc(nseq,sizeof(int *));
-  invid=(int *)calloc(nseq,sizeof(int));
-  id2=(int *)calloc(nseq,sizeof(int));
+  if (nseq<0||nseq>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+  bufoptst=(int **)R_Calloc((size_t)nseq,int *);
+  invid=(int *)R_Calloc((size_t)nseq,int);
+  id2=(int *)R_Calloc((size_t)nseq,int);
 
   SortLexigraphicInt(optst, bufoptst, invid, nb,nseq);
 	
   *newnseq=CountDifArray(bufoptst,nseq,nb,id2);
   
-  newst=(int **)calloc(*newnseq,sizeof(int *));
+  newst=(int **)R_Calloc((size_t)*newnseq,int *);
   for (i=0;i<*newnseq;i++) 
-    newst[i]=(int *)calloc(nb,sizeof(int));
+    newst[i]=(int *)R_Calloc((size_t)nb,int);
 
   for (i=0;i<nseq;i++) {
     newid[invid[i]]=id2[i];
@@ -892,9 +895,9 @@ void FindDifSeq(int **optst, int nseq, int nb, int ***newst_pt,
 
   *newst_pt=newst;
 
-  free(bufoptst);
-  free(invid);
-  free(id2);
+  R_Free(bufoptst);
+  R_Free(invid);
+  R_Free(id2);
 }
 
 void groupmode(double **mode, int dim, int num, int *cls, int *numcls, 
@@ -905,7 +908,7 @@ void groupmode(double **mode, int dim, int num, int *cls, int *numcls,
   double db1;
   //double db2, db3;
   
-  done=(int *)calloc(num,sizeof(int));
+  done=(int *)R_Calloc((size_t)num,int);
   for (i=0;i<num;i++) {
     done[i]=0;
     cls[i]=0;
@@ -947,7 +950,7 @@ void groupmode(double **mode, int dim, int num, int *cls, int *numcls,
 
   *numcls=index;
 
-  free(done);
+  R_Free(done);
 }
 
 int FindCluster(double *mode, int dim, int rncls, double **refmode,

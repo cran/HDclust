@@ -1,5 +1,5 @@
 #include <Rcpp.h>
-
+using namespace Rcpp;
 #ifdef _OPENMP
 	#include <omp.h>
 #endif
@@ -28,7 +28,11 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
 
   double **u; // 2d representation of the data. Each row - new datapoint
 
-  u = (double **)calloc(nseq,sizeof(double *));
+  if (nseq<0 || nseq>SIZE_MAX){
+    Rcpp::stop("Error in memory allocation, negative or too large size\n");
+    
+  }
+  u = (double **)R_Calloc((size_t)nseq,double *);
 
   for (int i = 0; i < nseq; i++){
     u[i] = dataTranspose.begin() + i*dim;
@@ -91,8 +95,10 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
 
     bstrVarOrder = as<std::vector<std::vector<int> > > (lvar);
 
-
-    var = (int **)calloc(nb,sizeof(int *));
+  if (nb<0||nb>SIZE_MAX) {
+    Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+  }
+    var = (int **)R_Calloc((size_t)nb,int *);
 
     for (int i=0; i<nb; i++){
 	  for (std::vector<int>::iterator it = bstrVarOrder[i].begin(); it != bstrVarOrder[i].end(); it++) *it -= 1;
@@ -147,7 +153,11 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
       vecPerm = as<std::vector<std::vector<int> > >(lperm);
 
       nperm0 = static_cast<int>(vecPerm.size());
-      vlist0=(int **)calloc(nperm0,sizeof(int *));
+          
+      if (nperm0<0|| nperm0 > SIZE_MAX) {
+	Rcpp::stop("Error in memory allocation, negative or too large size.\n");
+      }
+      vlist0=(int **)R_Calloc((size_t)nperm0,int *);
 
       for (int i=0; i<nperm0; i++){
 		for (std::vector<int>::iterator it = vecPerm[i].begin(); it != vecPerm[i].end(); it++) *it -= 1;
@@ -187,8 +197,10 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
   double *loglikehd, lhsum;
   int randomseed=0;
 
-  loglikehd=(double *)calloc(nseq,sizeof(double));
-  
+  if (nseq<0 || nseq>SIZE_MAX){
+    Rcpp::stop("Error in memory allocation, negative or too large size\n");
+  }
+  loglikehd=(double *)R_Calloc((size_t)nseq,double);  
   
   #ifdef _OPENMP
   int num_threads = as<int>(nthread);
@@ -297,21 +309,21 @@ S4 rcpp_trainHmmVb(NumericMatrix dataTranspose, const RObject &VbStructure,
   }
     
   // free memory  
-  free(u);
-  free(loglikehd);
+  R_Free(u);
+  R_Free(loglikehd);
   freeccm(&md);
-  free(md);
+  R_Free(md);
   
-  if (!Rf_isNull(searchControl["perm"])) free(vlist0);
+  if (!Rf_isNull(searchControl["perm"])) R_Free(vlist0);
   
   if (Rf_isNull(VbStructure)){
-  	free(bdim);
+  	R_Free(bdim);
   	
   	for (int i = 0; i < nb; i++)
-  		free(var[i]);
+  		R_Free(var[i]);
   }
   
-  free(var);
+  R_Free(var);
   
   
   S4 HmmVb = HMMVB(Named("HmmChain", HmmChain), Named("VbStructure", NewVbStructure), Named("BIC", -2*lhsum), Named("diagCov", LogicalVector(wrap(DIAGCOV))), Named("Loglikehd",loglh));

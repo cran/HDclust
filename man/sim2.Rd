@@ -4,7 +4,9 @@
 \name{sim2}
 \alias{sim2}
 \title{Synthetic dataset used in section 5.1.2 of the reference paper.}
-\format{A data frame with 5000 rows and 5 variables. Last column contains ground truth cluster labels.}
+\format{
+A data frame with 5000 rows and 5 variables. Last column contains ground truth cluster labels.
+}
 \usage{
 sim2
 }
